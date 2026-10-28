@@ -1,0 +1,22 @@
+services:
+  slides-api:
+    build: ./slides-api
+    container_name: slides-api
+    restart: unless-stopped
+    environment:
+      - PORT=8080
+      - SPRING_DATASOURCE_URL=${SPRING_DATASOURCE_URL:-jdbc:postgresql://mptuoyaljf9zlakkx17khyz6:5432/postgres?sslmode=allow}
+      - SPRING_DATASOURCE_USERNAME=${SPRING_DATASOURCE_USERNAME:-criadorSlide}
+      - SPRING_DATASOURCE_PASSWORD=${SPRING_DATASOURCE_PASSWORD:-7v4OQntHDHT8CweqkCqjn1lbNuPDcOiUIPe7XLJaYS0dECQ9MjU5c1f2P405orHM}
+    ports:
+      - "8080:8080"
+
+  slides-web:
+    build: ./slides-web
+    container_name: slides-web
+    restart: unless-stopped
+    depends_on:
+      - slides-api
+    ports:
+      - "5173:80"
+
