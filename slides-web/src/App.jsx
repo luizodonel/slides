@@ -15,14 +15,11 @@ import {
   BookOpen,
   Sliders,
   Maximize2,
-  Edit3,
-  History,
-  Plus,
-  Minus
+  Eye,
+  SlidersHorizontal
 } from 'lucide-react';
 import {
   SUBJECT_THEMES,
-  TEMPLATE_STYLES,
   COLOR_PALETTES,
   PAGE_LAYOUTS
 } from './data/slideTemplates';
@@ -35,53 +32,49 @@ const DEFAULT_LAYOUT_ORDER = [
   'columns-4',
   'infographic-stats',
   'grid-4-cards',
-  'closing-thankyou',
-  'split-photo-right',
-  'timeline-steps',
-  'quote-vision',
-  'cover-diagonal'
+  'closing-thankyou'
 ];
 
 export default function App() {
-  // 1. Idea, Subject & Template Model
+  // Mobile/Tablet View Mode: 'edit' | 'preview'
+  const [mobileView, setMobileView] = useState('preview');
+
+  // 1. Idea & Subject
   const [idea, setIdea] = useState(
-    'Teorema de Pitágoras, relações trigonométricas no triângulo retângulo e aplicações práticas na arquitetura'
+    'Teorema de Pitágoras e relações no triângulo retângulo aplicadas na arquitetura'
   );
   const [subjectTheme, setSubjectTheme] = useState('matematica');
-  const [templateStyle, setTemplateStyle] = useState('geometric-modern');
 
-  // 2. Colors (2 colors or Automatic AI)
+  // 2. Colors (Auto AI vs Manual 2 Colors)
   const [autoColors, setAutoColors] = useState(true);
-  const [primaryColor, setPrimaryColor] = useState('#F97316');
-  const [secondaryColor, setSecondaryColor] = useState('#1E293B');
+  const [primaryColor, setPrimaryColor] = useState('#2563EB');
+  const [secondaryColor, setSecondaryColor] = useState('#0F172A');
 
-  // 3. Total Pages & Per-Page Layout Configuration
-  const [totalPages, setTotalPages] = useState(6);
+  // 3. Pages & Layouts
+  const [totalPages, setTotalPages] = useState(4);
   const [pageConfigs, setPageConfigs] = useState(() =>
-    Array.from({ length: 6 }, (_, i) => ({
+    Array.from({ length: 4 }, (_, i) => ({
       pageNumber: i + 1,
-      layoutType: i === 0 ? 'cover-circle' : i === 5 ? 'closing-thankyou' : DEFAULT_LAYOUT_ORDER[i % DEFAULT_LAYOUT_ORDER.length],
-      customTitle: '',
-      customNotes: ''
+      layoutType: i === 0 ? 'cover-circle' : i === 3 ? 'closing-thankyou' : DEFAULT_LAYOUT_ORDER[i % DEFAULT_LAYOUT_ORDER.length],
+      customTitle: ''
     }))
   );
 
-  // 4. Uploaded Photos mapped to Page Numbers
+  // 4. Photos
   const [uploadedPhotos, setUploadedPhotos] = useState([]);
 
-  // 5. Generated Presentation & Active Preview State
+  // 5. Active Presentation State
   const [presentation, setPresentation] = useState(null);
   const [activeSlideIdx, setActiveSlideIdx] = useState(0);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isExportingPdf, setIsExportingPdf] = useState(false);
-  const [activeTab, setActiveTab] = useState('ideia'); // 'ideia' | 'paginas' | 'fotos' | 'cores' | 'editor'
+  const [activeTab, setActiveTab] = useState('ideia'); // 'ideia' | 'paginas' | 'fotos' | 'cores'
   const [fullscreenMode, setFullscreenMode] = useState(false);
-  const [historyList, setHistoryList] = useState([]);
   const [statusMessage, setStatusMessage] = useState('');
 
-  // Keep pageConfigs synchronized when totalPages changes
+  // Synchronize page configs when total pages change
   const handleTotalPagesChange = (newTotal) => {
-    const clamped = Math.max(2, Math.min(15, Number(newTotal) || 6));
+    const clamped = Math.max(2, Math.min(12, Number(newTotal) || 4));
     setTotalPages(clamped);
 
     setPageConfigs((prev) => {
@@ -99,8 +92,7 @@ export default function App() {
           next.push({
             pageNumber: i + 1,
             layoutType: defaultLayout,
-            customTitle: '',
-            customNotes: ''
+            customTitle: ''
           });
         }
       }
@@ -108,55 +100,46 @@ export default function App() {
     });
   };
 
-  // Update layout or notes of a specific page position
-  const updatePageConfig = (index, field, value) => {
+  const updatePageLayout = (index, layoutType) => {
     setPageConfigs((prev) => {
       const copy = [...prev];
-      copy[index] = { ...copy[index], [field]: value };
+      copy[index] = { ...copy[index], layoutType };
       return copy;
     });
 
-    // Also update live presentation slide if already generated
     if (presentation && presentation.slides && presentation.slides[index]) {
       setPresentation((prev) => {
         const slidesCopy = [...prev.slides];
-        slidesCopy[index] = {
-          ...slidesCopy[index],
-          ...(field === 'layoutType' ? { layoutType: value } : {}),
-          ...(field === 'customTitle' && value ? { title: value } : {})
-        };
+        slidesCopy[index] = { ...slidesCopy[index], layoutType };
         return { ...prev, slides: slidesCopy };
       });
     }
   };
 
-  // Move a page position up or down
   const movePagePosition = (index, direction) => {
     const targetIdx = index + direction;
     if (targetIdx < 0 || targetIdx >= pageConfigs.length) return;
 
-    const oldPageA = index + 1;
-    const oldPageB = targetIdx + 1;
+    const pageA = index + 1;
+    const pageB = targetIdx + 1;
 
     setPageConfigs((prev) => {
       const copy = [...prev];
       const temp = copy[index];
-      copy[index] = { ...copy[targetIdx], pageNumber: oldPageA };
-      copy[targetIdx] = { ...temp, pageNumber: oldPageB };
+      copy[index] = { ...copy[targetIdx], pageNumber: pageA };
+      copy[targetIdx] = { ...temp, pageNumber: pageB };
       return copy;
     });
 
-    // Also swap photo page assignments if photos were attached to those pages
     setUploadedPhotos((prev) =>
       prev.map((p) => {
-        if (p.pageNumber === oldPageA) return { ...p, pageNumber: oldPageB };
-        if (p.pageNumber === oldPageB) return { ...p, pageNumber: oldPageA };
+        if (p.pageNumber === pageA) return { ...p, pageNumber: pageB };
+        if (p.pageNumber === pageB) return { ...p, pageNumber: pageA };
         return p;
       })
     );
   };
 
-  // Handle Multi-Photo Upload
   const handlePhotoUpload = (e) => {
     const files = Array.from(e.target.files || []);
     if (!files.length) return;
@@ -166,7 +149,6 @@ export default function App() {
       reader.onload = () => {
         const base64 = reader.result;
         setUploadedPhotos((prev) => {
-          // Pick first page that doesn't have a photo yet, or page 1
           const usedPages = new Set(prev.map((p) => p.pageNumber));
           let defaultPage = 1;
           for (let p = 1; p <= totalPages; p++) {
@@ -228,21 +210,19 @@ export default function App() {
     });
   };
 
-  // Resolve effective 2 colors for preview
   const getEffectiveColors = () => {
     if (!autoColors) {
       return [primaryColor, secondaryColor];
     }
     const foundTheme = SUBJECT_THEMES.find((t) => t.id === subjectTheme);
-    return foundTheme ? foundTheme.defaultColors : ['#F97316', '#1E293B'];
+    return foundTheme ? foundTheme.defaultColors : ['#2563EB', '#0F172A'];
   };
 
   const [effectivePrimary, effectiveSecondary] = getEffectiveColors();
 
-  // Generate Presentation via Spring Boot Backend (with local fallback if offline)
   const handleGenerateSlides = async () => {
     setIsGenerating(true);
-    setStatusMessage('Gerando estrutura visual, conteúdo inteligente e layouts 16:9...');
+    setStatusMessage('Criando slides educativos...');
 
     const pagesPayload = pageConfigs.map((cfg, idx) => {
       const pageNum = idx + 1;
@@ -251,7 +231,6 @@ export default function App() {
         pageNumber: pageNum,
         layoutType: cfg.layoutType,
         customTitle: cfg.customTitle || null,
-        customNotes: cfg.customNotes || null,
         photoBase64: assignedPhoto ? assignedPhoto.dataUrl : null,
         photoCaption: assignedPhoto ? assignedPhoto.caption : null
       };
@@ -260,7 +239,7 @@ export default function App() {
     const payload = {
       idea,
       subjectTheme,
-      templateStyle,
+      templateStyle: 'academic-clean',
       totalPages,
       autoColors,
       primaryColor: autoColors ? effectivePrimary : primaryColor,
@@ -275,30 +254,31 @@ export default function App() {
         body: JSON.stringify(payload)
       });
 
-      if (!res.ok) {
-        throw new Error(`HTTP ${res.status}`);
-      }
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
       setPresentation(data);
       setActiveSlideIdx(0);
-      setStatusMessage('Apresentação gerada com sucesso! Você pode editar qualquer texto ou baixar o PDF.');
-      fetchHistory();
-    } catch (err) {
-      // Fallback local generation if backend is starting
+      setStatusMessage('Slides gerados com sucesso!');
+      if (window.innerWidth < 960) {
+        setMobileView('preview');
+      }
+    } catch (_) {
       const fallback = buildLocalFallbackPresentation(payload);
       setPresentation(fallback);
       setActiveSlideIdx(0);
-      setStatusMessage('Apresentação pronta no visualizador 16:9!');
+      setStatusMessage('Slides prontos!');
+      if (window.innerWidth < 960) {
+        setMobileView('preview');
+      }
     } finally {
       setIsGenerating(false);
     }
   };
 
-  // Export PDF from Spring Boot Backend (/api/slides/export-pdf)
   const handleExportPdf = async () => {
     if (!presentation) return;
     setIsExportingPdf(true);
-    setStatusMessage('Renderizando páginas em alta definição Full HD (16:9) e gerando arquivo PDF...');
+    setStatusMessage('Gerando PDF Full HD...');
 
     try {
       const exportPayload = {
@@ -313,14 +293,12 @@ export default function App() {
         body: JSON.stringify(exportPayload)
       });
 
-      if (!res.ok) {
-        throw new Error(`Erro HTTP ${res.status}`);
-      }
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
       const blob = await res.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
-      const safeName = (presentation.presentationTitle || 'apresentacao-slides')
+      const safeName = (presentation.presentationTitle || 'apresentacao-escolar')
         .toLowerCase()
         .replace(/[^a-z0-9-_]/g, '-')
         .replace(/-+/g, '-');
@@ -330,53 +308,19 @@ export default function App() {
       a.click();
       a.remove();
       window.URL.revokeObjectURL(url);
-      setStatusMessage('Download do PDF concluído com sucesso!');
-    } catch (err) {
-      // Print-to-PDF fallback
+      setStatusMessage('PDF baixado com sucesso!');
+    } catch (_) {
       window.print();
-      setStatusMessage('PDF aberto para salvamento!');
+      setStatusMessage('Imprimindo ou salvando em PDF...');
     } finally {
       setIsExportingPdf(false);
     }
   };
 
-  const fetchHistory = async () => {
-    try {
-      const res = await fetch('/api/slides/history');
-      if (res.ok) {
-        const list = await res.json();
-        setHistoryList(list);
-      }
-    } catch (_) {}
-  };
-
   useEffect(() => {
     handleGenerateSlides();
-    fetchHistory();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  // Select Subject Theme & load sample idea if desired
-  const handleSelectSubject = (themeObj) => {
-    setSubjectTheme(themeObj.id);
-    if (autoColors) {
-      setPrimaryColor(themeObj.defaultColors[0]);
-      setSecondaryColor(themeObj.defaultColors[1]);
-    }
-  };
-
-  // Edit active slide content inline
-  const updateActiveSlideField = (field, value) => {
-    if (!presentation) return;
-    setPresentation((prev) => {
-      const slidesCopy = [...prev.slides];
-      slidesCopy[activeSlideIdx] = {
-        ...slidesCopy[activeSlideIdx],
-        [field]: value
-      };
-      return { ...prev, slides: slidesCopy };
-    });
-  };
 
   const currentSlide =
     presentation && presentation.slides && presentation.slides[activeSlideIdx]
@@ -391,71 +335,80 @@ export default function App() {
     : secondaryColor;
 
   return (
-    <div className="app-shell">
-      {/* Top Navbar */}
-      <header className="top-navbar no-print">
-        <div className="brand-left">
-          <div className="brand-logo" style={{ background: `linear-gradient(135deg, ${displayPrimary}, ${displaySecondary})` }}>
-            <Layers size={22} color="#fff" />
+    <div className="edu-app">
+      {/* Top Header - Compact, clean & mobile friendly */}
+      <header className="edu-header no-print">
+        <div className="edu-header-left">
+          <div className="edu-logo" style={{ backgroundColor: displayPrimary }}>
+            <BookOpen size={20} color="#fff" />
           </div>
           <div>
-            <div className="brand-title">
-              SlideCraft <span>AI Studio</span>
-            </div>
-            <div className="brand-sub">
-              Criador de Apresentações 16:9 com Layouts Por Posição & Exportador PDF
-            </div>
+            <h1 className="edu-title">SlideEdu <span>IA</span></h1>
+            <p className="edu-sub">Criador de Slides para Estudos e Aulas</p>
           </div>
         </div>
 
-        <div className="top-actions">
-          <div className="color-pill-indicator">
-            <span className="cpi-dot" style={{ backgroundColor: displayPrimary }} />
-            <span className="cpi-dot" style={{ backgroundColor: displaySecondary }} />
-            <span className="cpi-text">
-              {autoColors ? 'Cores IA Automáticas' : '2 Cores Personalizadas'}
-            </span>
-          </div>
-
+        {/* Mobile View Segmented Switch */}
+        <div className="edu-mobile-toggle">
           <button
             type="button"
-            className="btn-generate-top"
+            className={mobileView === 'edit' ? 'active' : ''}
+            onClick={() => setMobileView('edit')}
+          >
+            <SlidersHorizontal size={15} />
+            <span>Editar</span>
+          </button>
+          <button
+            type="button"
+            className={mobileView === 'preview' ? 'active' : ''}
+            onClick={() => setMobileView('preview')}
+          >
+            <Eye size={15} />
+            <span>Ver Slides</span>
+          </button>
+        </div>
+
+        <div className="edu-header-actions">
+          <button
+            type="button"
+            className="edu-btn-generate"
             onClick={handleGenerateSlides}
             disabled={isGenerating}
           >
-            <Wand2 size={18} />
-            {isGenerating ? 'Gerando Slides...' : 'Gerar / Atualizar Slides'}
+            <Wand2 size={16} />
+            <span className="btn-label-desktop">{isGenerating ? 'Criando...' : 'Gerar com IA'}</span>
           </button>
 
           <button
             type="button"
-            className="btn-export-pdf"
+            className="edu-btn-download"
             onClick={handleExportPdf}
             disabled={isExportingPdf || !presentation}
             style={{ backgroundColor: displayPrimary }}
           >
-            <FileDown size={18} />
-            {isExportingPdf ? 'Exportando PDF...' : 'Baixar Slide em PDF'}
+            <FileDown size={16} />
+            <span className="btn-label-desktop">{isExportingPdf ? 'Baixando...' : 'Baixar PDF'}</span>
           </button>
         </div>
       </header>
 
-      {/* Main Studio Workspace */}
-      <div className="studio-workspace no-print">
-        {/* Left Configuration Sidebar */}
-        <aside className="config-sidebar">
-          <div className="step-tabs">
+      {/* Main Content Area */}
+      <div className="edu-main-layout no-print">
+        {/* Left Control Panel (Edit Mode) */}
+        <aside className={`edu-control-panel ${mobileView === 'edit' ? 'show-mobile' : 'hide-mobile'}`}>
+          {/* Clean Step Selector */}
+          <div className="edu-nav-tabs">
             <button
               type="button"
-              className={`step-tab ${activeTab === 'ideia' ? 'active' : ''}`}
+              className={activeTab === 'ideia' ? 'active' : ''}
               onClick={() => setActiveTab('ideia')}
             >
-              <BookOpen size={16} />
-              <span>1. Ideia & Tema</span>
+              <Sparkles size={16} />
+              <span>1. Ideia</span>
             </button>
             <button
               type="button"
-              className={`step-tab ${activeTab === 'paginas' ? 'active' : ''}`}
+              className={activeTab === 'paginas' ? 'active' : ''}
               onClick={() => setActiveTab('paginas')}
             >
               <Layers size={16} />
@@ -463,7 +416,7 @@ export default function App() {
             </button>
             <button
               type="button"
-              className={`step-tab ${activeTab === 'fotos' ? 'active' : ''}`}
+              className={activeTab === 'fotos' ? 'active' : ''}
               onClick={() => setActiveTab('fotos')}
             >
               <ImagePlus size={16} />
@@ -471,263 +424,157 @@ export default function App() {
             </button>
             <button
               type="button"
-              className={`step-tab ${activeTab === 'cores' ? 'active' : ''}`}
+              className={activeTab === 'cores' ? 'active' : ''}
               onClick={() => setActiveTab('cores')}
             >
               <Palette size={16} />
               <span>4. Cores</span>
             </button>
-            <button
-              type="button"
-              className={`step-tab ${activeTab === 'editor' ? 'active' : ''}`}
-              onClick={() => setActiveTab('editor')}
-            >
-              <Edit3 size={16} />
-              <span>5. Editar</span>
-            </button>
           </div>
 
-          <div className="sidebar-scroll-content">
-            {/* TAB 1: IDEIA, DISCIPLINA & MODELO */}
+          <div className="edu-panel-body">
+            {/* TAB 1: IDEIA & MATÉRIA */}
             {activeTab === 'ideia' && (
-              <div className="tab-pane">
-                <div className="section-block">
-                  <label className="section-label">
-                    <Sparkles size={16} /> Digite a Ideia ou Tema do seu Slide
-                  </label>
+              <div className="edu-tab-content">
+                <div className="edu-card">
+                  <label className="edu-card-title">Qual é o tema do trabalho ou aula?</label>
                   <textarea
-                    rows={4}
-                    className="idea-textarea"
-                    placeholder="Ex: Explique as Três Leis de Newton com fórmulas, exemplos do cotidiano e exercícios..."
+                    rows={3}
+                    className="edu-input-textarea"
+                    placeholder="Ex: Teorema de Pitágoras e aplicações práticas na construção..."
                     value={idea}
                     onChange={(e) => setIdea(e.target.value)}
                   />
-                  <div className="helper-note">
-                    A IA estrutura os títulos, tópicos, colunas 01–04, estatísticas e síntese com base na sua ideia.
-                  </div>
+                  <span className="edu-tip">
+                    A IA criará títulos didáticos, explicações passo a passo e tópicos claros.
+                  </span>
                 </div>
 
-                <div className="section-block">
-                  <label className="section-label">
-                    <BookOpen size={16} /> Escolha a Matéria / Tema do Slide
-                  </label>
-                  <div className="subject-grid">
-                    {SUBJECT_THEMES.map((subj) => {
-                      const selected = subjectTheme === subj.id;
+                <div className="edu-card">
+                  <label className="edu-card-title">Escolha a Matéria:</label>
+                  <div className="edu-subject-chips">
+                    {SUBJECT_THEMES.map((sub) => {
+                      const isSel = subjectTheme === sub.id;
                       return (
-                        <div
-                          key={subj.id}
-                          className={`subject-card ${selected ? 'selected' : ''}`}
-                          onClick={() => handleSelectSubject(subj)}
+                        <button
+                          key={sub.id}
+                          type="button"
+                          className={`edu-chip ${isSel ? 'selected' : ''}`}
+                          onClick={() => {
+                            setSubjectTheme(sub.id);
+                            if (autoColors) {
+                              setPrimaryColor(sub.defaultColors[0]);
+                              setSecondaryColor(sub.defaultColors[1]);
+                            }
+                          }}
                         >
-                          <div className="sc-top">
-                            <span className="sc-icon">{subj.icon}</span>
-                            <div className="sc-color-dots">
-                              <span style={{ backgroundColor: subj.defaultColors[0] }} />
-                              <span style={{ backgroundColor: subj.defaultColors[1] }} />
-                            </div>
-                          </div>
-                          <div className="sc-name">{subj.name}</div>
-                          <div className="sc-desc">{subj.description}</div>
-                          <button
-                            type="button"
-                            className="sc-use-sample"
-                            onClick={(ev) => {
-                              ev.stopPropagation();
-                              handleSelectSubject(subj);
-                              setIdea(subj.sampleIdea);
-                            }}
-                          >
-                            Usar exemplo de ideia
-                          </button>
-                        </div>
+                          <span className="edu-chip-icon">{sub.icon}</span>
+                          <span className="edu-chip-name">{sub.name}</span>
+                        </button>
                       );
                     })}
-                  </div>
-                </div>
-
-                <div className="section-block">
-                  <label className="section-label">
-                    <Sliders size={16} /> Estilo de Modelo Visual
-                  </label>
-                  <div className="template-style-list">
-                    {TEMPLATE_STYLES.map((st) => (
-                      <div
-                        key={st.id}
-                        className={`template-style-item ${templateStyle === st.id ? 'selected' : ''}`}
-                        onClick={() => setTemplateStyle(st.id)}
-                      >
-                        <div className="tsi-header">
-                          <strong>{st.name}</strong>
-                          <span className="tsi-badge">{st.badge}</span>
-                        </div>
-                        <p>{st.description}</p>
-                      </div>
-                    ))}
                   </div>
                 </div>
 
                 <button
                   type="button"
-                  className="btn-primary-full"
+                  className="edu-btn-primary"
                   style={{ backgroundColor: displayPrimary }}
                   onClick={() => setActiveTab('paginas')}
                 >
-                  Próximo: Definir Páginas e Layouts →
+                  Continuar: Escolher Páginas e Layouts →
                 </button>
               </div>
             )}
 
-            {/* TAB 2: QUANTIDADE DE PÁGINAS & LAYOUT POR POSIÇÃO */}
+            {/* TAB 2: QUANTIDADE DE PÁGINAS & LAYOUTS */}
             {activeTab === 'paginas' && (
-              <div className="tab-pane">
-                <div className="section-block">
-                  <label className="section-label">
-                    <Layers size={16} /> Quantas páginas terá o seu Slide?
-                  </label>
-                  <div className="page-count-control">
-                    <button
-                      type="button"
-                      className="pcc-btn"
-                      onClick={() => handleTotalPagesChange(totalPages - 1)}
-                    >
-                      <Minus size={16} />
-                    </button>
-                    <input
-                      type="range"
-                      min={2}
-                      max={15}
-                      value={totalPages}
-                      onChange={(e) => handleTotalPagesChange(e.target.value)}
-                    />
-                    <button
-                      type="button"
-                      className="pcc-btn"
-                      onClick={() => handleTotalPagesChange(totalPages + 1)}
-                    >
-                      <Plus size={16} />
-                    </button>
-                    <span className="pcc-badge" style={{ backgroundColor: displayPrimary }}>
-                      {totalPages} Páginas
+              <div className="edu-tab-content">
+                <div className="edu-card">
+                  <div className="edu-card-header-row">
+                    <label className="edu-card-title">Quantas páginas de slides?</label>
+                    <span className="edu-badge-pages" style={{ backgroundColor: displayPrimary }}>
+                      {totalPages} páginas
                     </span>
                   </div>
-                </div>
-
-                <div className="section-block">
-                  <label className="section-label">
-                    Posição das Páginas & Escolha de Layout por Página
-                  </label>
-                  <p className="section-subtext">
-                    Selecione qual modelo de layout vai ficar em cada posição (Página 1, Página 2...) e use as setas para mudar a ordem:
-                  </p>
-
-                  <div className="page-sequence-list">
-                    {pageConfigs.map((cfg, idx) => {
-                      const pageNum = idx + 1;
-                      const assignedPhoto = uploadedPhotos.find((p) => Number(p.pageNumber) === pageNum);
-                      const currentLayoutMeta =
-                        PAGE_LAYOUTS.find((l) => l.id === cfg.layoutType) || PAGE_LAYOUTS[0];
-
-                      return (
-                        <div
-                          key={pageNum}
-                          className={`page-seq-card ${activeSlideIdx === idx ? 'active-page-card' : ''}`}
-                          onClick={() => setActiveSlideIdx(idx)}
-                        >
-                          <div className="psc-top">
-                            <div className="psc-pos-badge" style={{ backgroundColor: displaySecondary }}>
-                              Página {pageNum}
-                            </div>
-                            <span className="psc-category">{currentLayoutMeta.category}</span>
-
-                            <div className="psc-order-btns" onClick={(e) => e.stopPropagation()}>
-                              <button
-                                type="button"
-                                title="Subir posição da página"
-                                disabled={idx === 0}
-                                onClick={() => movePagePosition(idx, -1)}
-                              >
-                                <ArrowUp size={14} />
-                              </button>
-                              <button
-                                type="button"
-                                title="Descer posição da página"
-                                disabled={idx === pageConfigs.length - 1}
-                                onClick={() => movePagePosition(idx, 1)}
-                              >
-                                <ArrowDown size={14} />
-                              </button>
-                            </div>
-                          </div>
-
-                          <div className="psc-body" onClick={(e) => e.stopPropagation()}>
-                            <div className="psc-mini-thumb">
-                              <LayoutMiniPreview
-                                layoutId={cfg.layoutType}
-                                primary={displayPrimary}
-                                secondary={displaySecondary}
-                              />
-                            </div>
-
-                            <div className="psc-controls">
-                              <label>Layout da Página {pageNum}:</label>
-                              <select
-                                value={cfg.layoutType}
-                                onChange={(e) => updatePageConfig(idx, 'layoutType', e.target.value)}
-                              >
-                                {PAGE_LAYOUTS.map((l) => (
-                                  <option key={l.id} value={l.id}>
-                                    {l.name} ({l.category})
-                                  </option>
-                                ))}
-                              </select>
-
-                              <input
-                                type="text"
-                                placeholder={`Título opcional para a Página ${pageNum}...`}
-                                value={cfg.customTitle}
-                                onChange={(e) => updatePageConfig(idx, 'customTitle', e.target.value)}
-                              />
-                            </div>
-                          </div>
-
-                          <div className="psc-footer">
-                            <span>{currentLayoutMeta.description}</span>
-                            {assignedPhoto && (
-                              <span className="psc-photo-tag">
-                                📸 Foto vinculada ({assignedPhoto.name})
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      );
-                    })}
+                  <div className="edu-page-counter-row">
+                    {[2, 3, 4, 5, 6, 8, 10].map((num) => (
+                      <button
+                        key={num}
+                        type="button"
+                        className={`edu-num-btn ${totalPages === num ? 'active' : ''}`}
+                        onClick={() => handleTotalPagesChange(num)}
+                      >
+                        {num}
+                      </button>
+                    ))}
                   </div>
                 </div>
 
-                {/* Quick Gallery of all 10 Layouts to assign to current selected page */}
-                <div className="section-block">
-                  <label className="section-label">
-                    Galeria Visual de Layouts (Clique para aplicar na Página {activeSlideIdx + 1})
-                  </label>
-                  <div className="layout-gallery-grid">
-                    {PAGE_LAYOUTS.map((layout) => {
-                      const isCurrent =
-                        pageConfigs[activeSlideIdx]?.layoutType === layout.id;
+                <div className="edu-card">
+                  <label className="edu-card-title">Layout de cada página:</label>
+                  <p className="edu-tip" style={{ marginBottom: 12 }}>
+                    Escolha como quer organizar cada página da apresentação:
+                  </p>
+
+                  <div className="edu-page-list">
+                    {pageConfigs.map((cfg, idx) => {
+                      const pNum = idx + 1;
+                      const hasPhoto = uploadedPhotos.some((p) => Number(p.pageNumber) === pNum);
                       return (
                         <div
-                          key={layout.id}
-                          className={`layout-gallery-item ${isCurrent ? 'selected' : ''}`}
-                          onClick={() =>
-                            updatePageConfig(activeSlideIdx, 'layoutType', layout.id)
-                          }
+                          key={pNum}
+                          className={`edu-page-row ${activeSlideIdx === idx ? 'highlight' : ''}`}
+                          onClick={() => {
+                            setActiveSlideIdx(idx);
+                            if (window.innerWidth < 960) setMobileView('preview');
+                          }}
                         >
-                          <LayoutMiniPreview
-                            layoutId={layout.id}
-                            primary={displayPrimary}
-                            secondary={displaySecondary}
-                          />
-                          <div className="lgi-title">{layout.name}</div>
+                          <div className="edu-page-pos" style={{ backgroundColor: displaySecondary }}>
+                            {pNum}
+                          </div>
+
+                          <div className="edu-page-preview-box">
+                            <LayoutMiniPreview
+                              layoutId={cfg.layoutType}
+                              primary={displayPrimary}
+                              secondary={displaySecondary}
+                            />
+                          </div>
+
+                          <div className="edu-page-select-area" onClick={(e) => e.stopPropagation()}>
+                            <select
+                              value={cfg.layoutType}
+                              onChange={(e) => updatePageLayout(idx, e.target.value)}
+                              className="edu-clean-select"
+                            >
+                              {PAGE_LAYOUTS.map((l) => (
+                                <option key={l.id} value={l.id}>
+                                  {l.name}
+                                </option>
+                              ))}
+                            </select>
+                            {hasPhoto && <span className="edu-photo-badge">📸 Foto nesta página</span>}
+                          </div>
+
+                          <div className="edu-page-order-btns" onClick={(e) => e.stopPropagation()}>
+                            <button
+                              type="button"
+                              disabled={idx === 0}
+                              onClick={() => movePagePosition(idx, -1)}
+                              title="Subir página"
+                            >
+                              <ArrowUp size={13} />
+                            </button>
+                            <button
+                              type="button"
+                              disabled={idx === pageConfigs.length - 1}
+                              onClick={() => movePagePosition(idx, 1)}
+                              title="Descer página"
+                            >
+                              <ArrowDown size={13} />
+                            </button>
+                          </div>
                         </div>
                       );
                     })}
@@ -736,21 +583,15 @@ export default function App() {
               </div>
             )}
 
-            {/* TAB 3: UPLOAD DE FOTOS E SELEÇÃO DE PÁGINA */}
+            {/* TAB 3: UPLOAD DE FOTOS POR PÁGINA */}
             {activeTab === 'fotos' && (
-              <div className="tab-pane">
-                <div className="section-block">
-                  <label className="section-label">
-                    <ImagePlus size={16} /> Upload de Fotos por Página
-                  </label>
-                  <p className="section-subtext">
-                    Envie suas fotos e selecione exatamente em qual página (Página 1 a Página {totalPages}) cada foto será exibida:
-                  </p>
-
-                  <label className="photo-dropzone" style={{ borderColor: displayPrimary }}>
-                    <ImagePlus size={32} color={displayPrimary} />
-                    <strong>Clique para fazer upload de fotos</strong>
-                    <span>PNG, JPG ou WEBP — Você pode selecionar várias fotos de uma vez</span>
+              <div className="edu-tab-content">
+                <div className="edu-card">
+                  <label className="edu-card-title">Adicionar Fotos ao Slide</label>
+                  <label className="edu-upload-box" style={{ borderColor: displayPrimary }}>
+                    <ImagePlus size={28} color={displayPrimary} />
+                    <strong>Toque para escolher fotos</strong>
+                    <span>Envie imagens de gráficos, fórmulas ou fotos pessoais</span>
                     <input
                       type="file"
                       accept="image/*"
@@ -762,57 +603,40 @@ export default function App() {
                 </div>
 
                 {uploadedPhotos.length === 0 ? (
-                  <div className="empty-photos-box">
-                    Nenhuma foto enviada ainda. Os slides sem foto usarão ilustrações geométricas modernas nas cores do seu tema automaticamente.
+                  <div className="edu-empty-box">
+                    Nenhuma foto enviada ainda. As páginas sem foto usarão molduras geométricas limpas automaticamente.
                   </div>
                 ) : (
-                  <div className="uploaded-photos-list">
+                  <div className="edu-photo-cards">
                     {uploadedPhotos.map((photo) => (
-                      <div key={photo.id} className="uploaded-photo-card">
-                        <img src={photo.dataUrl} alt={photo.name} className="upc-thumb" />
-                        <div className="upc-info">
-                          <div className="upc-top-row">
-                            <strong className="upc-name">{photo.name}</strong>
+                      <div key={photo.id} className="edu-photo-item">
+                        <img src={photo.dataUrl} alt={photo.name} />
+                        <div className="edu-photo-controls">
+                          <div className="edu-photo-header">
+                            <span className="edu-photo-name">{photo.name}</span>
                             <button
                               type="button"
-                              className="upc-del-btn"
+                              className="edu-del-btn"
                               onClick={() => removePhoto(photo.id)}
-                              title="Remover foto"
                             >
-                              <Trash2 size={15} />
+                              <Trash2 size={14} />
                             </button>
                           </div>
 
-                          <label className="upc-label">
-                            Exibir esta foto em qual página?
-                          </label>
+                          <label>Mostrar em qual página?</label>
                           <select
                             value={photo.pageNumber}
                             onChange={(e) =>
                               updatePhotoAssignment(photo.id, 'pageNumber', e.target.value)
                             }
-                            className="upc-page-select"
+                            className="edu-clean-select"
                           >
-                            {Array.from({ length: totalPages }, (_, i) => i + 1).map((pNum) => (
-                              <option key={pNum} value={pNum}>
-                                Página {pNum} — ({
-                                  PAGE_LAYOUTS.find(
-                                    (l) => l.id === pageConfigs[pNum - 1]?.layoutType
-                                  )?.name || 'Slide'
-                                })
+                            {Array.from({ length: totalPages }, (_, i) => i + 1).map((num) => (
+                              <option key={num} value={num}>
+                                Página {num}
                               </option>
                             ))}
                           </select>
-
-                          <input
-                            type="text"
-                            placeholder="Legenda opcional da foto..."
-                            value={photo.caption}
-                            onChange={(e) =>
-                              updatePhotoAssignment(photo.id, 'caption', e.target.value)
-                            }
-                            className="upc-caption-input"
-                          />
                         </div>
                       </div>
                     ))}
@@ -821,244 +645,102 @@ export default function App() {
               </div>
             )}
 
-            {/* TAB 4: ESCOLHA DE 2 CORES OU IA AUTOMÁTICA */}
+            {/* TAB 4: CORES DO TEMA */}
             {activeTab === 'cores' && (
-              <div className="tab-pane">
-                <div className="section-block">
-                  <label className="section-label">
-                    <Palette size={16} /> Cores do Tema (2 Cores ou IA Automática)
-                  </label>
-
-                  <div className="color-mode-switch">
+              <div className="edu-tab-content">
+                <div className="edu-card">
+                  <label className="edu-card-title">Cores da Apresentação</label>
+                  <div className="edu-mode-toggle">
                     <button
                       type="button"
-                      className={`cms-btn ${autoColors ? 'active' : ''}`}
+                      className={autoColors ? 'active' : ''}
                       onClick={() => setAutoColors(true)}
                     >
-                      <Wand2 size={16} />
-                      IA escolhe automaticamente
+                      <Wand2 size={14} /> Automático por Matéria
                     </button>
                     <button
                       type="button"
-                      className={`cms-btn ${!autoColors ? 'active' : ''}`}
+                      className={!autoColors ? 'active' : ''}
                       onClick={() => setAutoColors(false)}
                     >
-                      <Palette size={16} />
-                      Escolher minhas 2 cores
+                      <Palette size={14} /> Escolher 2 Cores
                     </button>
                   </div>
 
-                  {autoColors ? (
-                    <div className="ai-color-notice">
-                      <CheckCircle2 size={18} color="#10b981" />
-                      <div>
-                        <strong>Modo Automático com IA Ativado</strong>
-                        <p>
-                          A IA analisa o tema ({SUBJECT_THEMES.find((t) => t.id === subjectTheme)?.name}) e aplica automaticamente a combinação ideal de 2 cores contrastantes.
-                        </p>
+                  {!autoColors && (
+                    <div className="edu-color-pickers">
+                      <div className="edu-color-row">
+                        <span>Cor 1 (Destaque):</span>
+                        <input
+                          type="color"
+                          value={primaryColor}
+                          onChange={(e) => setPrimaryColor(e.target.value)}
+                        />
+                        <span className="hex-label">{primaryColor}</span>
                       </div>
-                    </div>
-                  ) : (
-                    <div className="manual-color-pickers">
-                      <div className="mcp-box">
-                        <label>1ª Cor (Principal / Destaque)</label>
-                        <div className="mcp-input-row">
-                          <input
-                            type="color"
-                            value={primaryColor}
-                            onChange={(e) => setPrimaryColor(e.target.value)}
-                          />
-                          <input
-                            type="text"
-                            value={primaryColor}
-                            onChange={(e) => setPrimaryColor(e.target.value)}
-                          />
-                        </div>
-                      </div>
-
-                      <div className="mcp-box">
-                        <label>2ª Cor (Secundária / Contraste)</label>
-                        <div className="mcp-input-row">
-                          <input
-                            type="color"
-                            value={secondaryColor}
-                            onChange={(e) => setSecondaryColor(e.target.value)}
-                          />
-                          <input
-                            type="text"
-                            value={secondaryColor}
-                            onChange={(e) => setSecondaryColor(e.target.value)}
-                          />
-                        </div>
+                      <div className="edu-color-row">
+                        <span>Cor 2 (Base/Texto):</span>
+                        <input
+                          type="color"
+                          value={secondaryColor}
+                          onChange={(e) => setSecondaryColor(e.target.value)}
+                        />
+                        <span className="hex-label">{secondaryColor}</span>
                       </div>
                     </div>
                   )}
                 </div>
 
-                <div className="section-block">
-                  <label className="section-label">
-                    Paletas de 2 Cores Recomendadas (Clique para testar)
-                  </label>
-                  <div className="palettes-grid">
-                    {COLOR_PALETTES.map((pal, i) => (
-                      <div
-                        key={i}
-                        className="palette-item"
+                <div className="edu-card">
+                  <label className="edu-card-title">Paletas Rápidas:</label>
+                  <div className="edu-palettes-grid">
+                    {COLOR_PALETTES.map((pal, idx) => (
+                      <button
+                        key={idx}
+                        type="button"
+                        className="edu-palette-btn"
                         onClick={() => {
                           setAutoColors(false);
                           setPrimaryColor(pal.primary);
                           setSecondaryColor(pal.secondary);
                         }}
                       >
-                        <div className="pi-swatches">
+                        <div className="edu-pal-dots">
                           <span style={{ backgroundColor: pal.primary }} />
                           <span style={{ backgroundColor: pal.secondary }} />
                         </div>
-                        <span className="pi-name">{pal.name}</span>
-                      </div>
+                        <span className="edu-pal-name">{pal.name}</span>
+                      </button>
                     ))}
                   </div>
                 </div>
               </div>
             )}
-
-            {/* TAB 5: EDITOR RÁPIDO DA PÁGINA ATUAL & HISTÓRICO */}
-            {activeTab === 'editor' && currentSlide && (
-              <div className="tab-pane">
-                <div className="section-block">
-                  <label className="section-label">
-                    <Edit3 size={16} /> Editando Página {activeSlideIdx + 1} de {presentation?.slides?.length || totalPages}
-                  </label>
-
-                  <div className="editor-field">
-                    <label>Layout desta página:</label>
-                    <select
-                      value={currentSlide.layoutType}
-                      onChange={(e) => {
-                        updateActiveSlideField('layoutType', e.target.value);
-                        updatePageConfig(activeSlideIdx, 'layoutType', e.target.value);
-                      }}
-                    >
-                      {PAGE_LAYOUTS.map((l) => (
-                        <option key={l.id} value={l.id}>
-                          {l.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div className="editor-field">
-                    <label>Selo Superior (Badge):</label>
-                    <input
-                      type="text"
-                      value={currentSlide.badge || ''}
-                      onChange={(e) => updateActiveSlideField('badge', e.target.value)}
-                    />
-                  </div>
-
-                  <div className="editor-field">
-                    <label>Título da Página:</label>
-                    <input
-                      type="text"
-                      value={currentSlide.title || ''}
-                      onChange={(e) => updateActiveSlideField('title', e.target.value)}
-                    />
-                  </div>
-
-                  <div className="editor-field">
-                    <label>Subtítulo:</label>
-                    <input
-                      type="text"
-                      value={currentSlide.subtitle || ''}
-                      onChange={(e) => updateActiveSlideField('subtitle', e.target.value)}
-                    />
-                  </div>
-
-                  <div className="editor-field">
-                    <label>Texto Explicativo:</label>
-                    <textarea
-                      rows={3}
-                      value={currentSlide.bodyText || ''}
-                      onChange={(e) => updateActiveSlideField('bodyText', e.target.value)}
-                    />
-                  </div>
-                </div>
-
-                {historyList.length > 0 && (
-                  <div className="section-block">
-                    <label className="section-label">
-                      <History size={16} /> Últimas Apresentações Salvas no Banco
-                    </label>
-                    <div className="history-items">
-                      {historyList.slice(0, 6).map((item) => (
-                        <div
-                          key={item.id}
-                          className="history-card"
-                          onClick={() => {
-                            if (item.slides && item.slides.length > 0) {
-                              setPresentation(item);
-                              setActiveSlideIdx(0);
-                            }
-                          }}
-                        >
-                          <div className="hc-dots">
-                            <span style={{ backgroundColor: item.primaryColor }} />
-                            <span style={{ backgroundColor: item.secondaryColor }} />
-                          </div>
-                          <div className="hc-meta">
-                            <strong>{item.presentationTitle}</strong>
-                            <span>{item.totalPages} págs • {item.createdAt}</span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-
-          <div className="sidebar-bottom-bar">
-            <button
-              type="button"
-              className="btn-generate-main"
-              onClick={handleGenerateSlides}
-              disabled={isGenerating}
-              style={{ backgroundColor: displaySecondary }}
-            >
-              <Sparkles size={18} />
-              {isGenerating ? 'Gerando...' : 'Gerar Slide com IA'}
-            </button>
           </div>
         </aside>
 
-        {/* Right Live Preview Stage (16:9 Widescreen) */}
-        <main className="preview-stage">
-          {/* Stage Top Bar */}
-          <div className="stage-toolbar">
-            <div className="st-left">
-              <span className="st-pres-title">
-                {presentation?.presentationTitle || 'Preview da Apresentação'}
-              </span>
-              {statusMessage && <span className="st-status-pill">{statusMessage}</span>}
-            </div>
-
-            <div className="st-controls">
+        {/* Right Preview Stage (Preview Mode) */}
+        <main className={`edu-stage ${mobileView === 'preview' ? 'show-mobile' : 'hide-mobile'}`}>
+          {/* Top Controls Bar for Slides Navigation */}
+          <div className="edu-stage-bar">
+            <div className="edu-nav-buttons">
               <button
                 type="button"
-                className="st-nav-btn"
+                className="edu-stage-btn"
                 disabled={activeSlideIdx === 0}
                 onClick={() => setActiveSlideIdx((i) => Math.max(0, i - 1))}
               >
                 <ChevronLeft size={18} /> Anterior
               </button>
-              <span className="st-page-counter">
+
+              <div className="edu-stage-counter">
                 Página <strong>{activeSlideIdx + 1}</strong> de{' '}
                 <strong>{presentation?.slides?.length || totalPages}</strong>
-              </span>
+              </div>
+
               <button
                 type="button"
-                className="st-nav-btn"
+                className="edu-stage-btn"
                 disabled={
                   !presentation?.slides ||
                   activeSlideIdx >= presentation.slides.length - 1
@@ -1071,31 +753,31 @@ export default function App() {
               >
                 Próxima <ChevronRight size={18} />
               </button>
-
-              <button
-                type="button"
-                className="st-icon-btn"
-                title="Tela Cheia"
-                onClick={() => setFullscreenMode(!fullscreenMode)}
-              >
-                <Maximize2 size={17} />
-              </button>
             </div>
+
+            <button
+              type="button"
+              className="edu-fullscreen-btn"
+              onClick={() => setFullscreenMode(!fullscreenMode)}
+              title="Tela cheia"
+            >
+              <Maximize2 size={16} />
+            </button>
           </div>
 
-          {/* 16:9 Widescreen Canvas Viewport */}
-          <div className={`canvas-viewport ${fullscreenMode ? 'fullscreen-canvas' : ''}`}>
+          {/* 16:9 Slide Canvas Viewport with responsive scaling */}
+          <div className={`edu-viewport ${fullscreenMode ? 'is-fullscreen' : ''}`}>
             {fullscreenMode && (
               <button
                 type="button"
-                className="exit-fs-btn"
+                className="edu-exit-fs"
                 onClick={() => setFullscreenMode(false)}
               >
-                Sair da Tela Cheia (ESC)
+                Sair da tela cheia ✕
               </button>
             )}
 
-            <div className="aspect-16x9-frame">
+            <div className="edu-slide-frame">
               {currentSlide && (
                 <SlideCanvas16x9
                   slide={currentSlide}
@@ -1109,39 +791,46 @@ export default function App() {
             </div>
           </div>
 
-          {/* Bottom Filmstrip of All Pages */}
-          <div className="filmstrip-bar">
-            {(presentation?.slides || []).map((s, idx) => {
-              const hasPhoto = Boolean(s.photoBase64);
-              return (
-                <div
-                  key={idx}
-                  className={`filmstrip-thumb ${activeSlideIdx === idx ? 'active' : ''}`}
-                  onClick={() => setActiveSlideIdx(idx)}
-                  style={{
-                    borderColor: activeSlideIdx === idx ? displayPrimary : 'transparent'
-                  }}
-                >
-                  <div className="ft-top">
-                    <span className="ft-num">Pág. {idx + 1}</span>
-                    {hasPhoto && <span className="ft-cam">📸</span>}
-                  </div>
-                  <div className="ft-mini-preview">
-                    <LayoutMiniPreview
-                      layoutId={s.layoutType}
-                      primary={displayPrimary}
-                      secondary={displaySecondary}
-                    />
-                  </div>
-                  <div className="ft-title">{s.title}</div>
+          {/* Bottom Filmstrip Carousel */}
+          <div className="edu-filmstrip">
+            {(presentation?.slides || []).map((slide, idx) => (
+              <div
+                key={idx}
+                className={`edu-thumb ${activeSlideIdx === idx ? 'active' : ''}`}
+                onClick={() => setActiveSlideIdx(idx)}
+                style={{
+                  borderColor: activeSlideIdx === idx ? displayPrimary : 'transparent'
+                }}
+              >
+                <div className="edu-thumb-header">Pág. {idx + 1}</div>
+                <div className="edu-thumb-svg">
+                  <LayoutMiniPreview
+                    layoutId={slide.layoutType}
+                    primary={displayPrimary}
+                    secondary={displaySecondary}
+                  />
                 </div>
-              );
-            })}
+              </div>
+            ))}
+          </div>
+
+          {/* Mobile Bottom Download Bar */}
+          <div className="edu-mobile-bottom-bar">
+            <button
+              type="button"
+              className="edu-btn-download-mobile"
+              style={{ backgroundColor: displayPrimary }}
+              onClick={handleExportPdf}
+              disabled={isExportingPdf || !presentation}
+            >
+              <FileDown size={18} />
+              {isExportingPdf ? 'Baixando PDF...' : 'Baixar Slide em PDF'}
+            </button>
           </div>
         </main>
       </div>
 
-      {/* Print-only all slides container for fallback PDF print */}
+      {/* Print only container for direct browser PDF generation */}
       <div className="print-only-slides">
         {(presentation?.slides || []).map((s, idx) => (
           <div key={idx} className="print-slide-page">
@@ -1160,45 +849,41 @@ export default function App() {
   );
 }
 
-// Local immediate fallback builder if API is not yet reachable
 function buildLocalFallbackPresentation(payload) {
   const title = payload.idea
-    ? payload.idea.slice(0, 62).toUpperCase()
-    : 'APRESENTAÇÃO EXECUTIVA & EDUCACIONAL';
-  const badge = (payload.subjectTheme || 'SLIDES').toUpperCase();
+    ? payload.idea.slice(0, 65).toUpperCase()
+    : 'APRESENTAÇÃO DIDÁTICA';
 
   const slides = (payload.pages || []).map((p, i) => ({
     pageNumber: i + 1,
     layoutType: p.layoutType || 'cover-circle',
-    badge: `PÁGINA 0${i + 1} • ${badge}`,
+    badge: `PÁGINA 0${i + 1} • CONCEITO`,
     title:
       p.customTitle ||
       (i === 0
         ? title
         : i === payload.pages.length - 1
         ? 'OBRIGADO PELA ATENÇÃO!'
-        : `TÓPICO ESTRUTURAL 0${i}`),
-    subtitle:
-      p.customNotes ||
-      `Análise didática e aplicação prática sobre ${payload.idea || 'o tema principal'}.`,
-    bodyText: `Desenvolvimento conceitual estruturado para a página ${i + 1}, combinando clareza visual, síntese objetiva e exemplos contextualizados.`,
+        : `TÓPICO 0${i}: FUNDAMENTOS`),
+    subtitle: `Compreendendo os conceitos essenciais e a lógica de ${payload.idea || 'estudo'}.`,
+    bodyText: `Explicação clara e organizada em etapas com exemplos práticos para facilitar o aprendizado e a memorização.`,
     bullets: [
-      'Fundamentação teórica e conceitos essenciais',
-      'Relações práticas e demonstração passo a passo',
-      'Síntese de resultados e aplicação direta'
+      'Conceito fundamental e definições básicas',
+      'Exemplos contextualizados no cotidiano',
+      'Resumo dos pontos mais importantes'
     ],
     columns: [
-      { number: '01', title: 'FUNDAMENTO BASE', description: 'Princípios centrais e definições iniciais.' },
-      { number: '02', title: 'ESTRUTURA LÓGICA', description: 'Regras, variáveis e conexões principais.' },
-      { number: '03', title: 'CASOS PRÁTICOS', description: 'Aplicação real em exercícios e projetos.' },
-      { number: '04', title: 'CONCLUSÃO CHAVE', description: 'Resultados e consolidação do aprendizado.' }
+      { number: '01', title: 'CONCEITO BASE', description: 'Definição inicial e regras básicas.' },
+      { number: '02', title: 'DESENVOLVIMENTO', description: 'Como aplicar na prática e exercícios.' },
+      { number: '03', title: 'APLICAÇÕES', description: 'Exemplos reais e resolução passo a passo.' },
+      { number: '04', title: 'CONCLUSÃO', description: 'Síntese final para fixação do conteúdo.' }
     ],
     stats: [
-      { value: '92%', label: 'Precisão Conceitual', description: 'Domínio completo dos fundamentos.' },
-      { value: '43%', label: 'Ganho de Eficiência', description: 'Metodologia estruturada em etapas.' },
-      { value: '100%', label: 'Aplicabilidade', description: 'Conexão direta com problemas reais.' }
+      { value: '95%', label: 'Clareza Didática', description: 'Estruturado para fácil compreensão.' },
+      { value: '3x', label: 'Mais Rápido', description: 'Economiza tempo na preparação de aulas.' },
+      { value: '100%', label: 'Educacional', description: 'Ideal para Ensino Fundamental, Médio e Faculdade.' }
     ],
-    highlightQuote: `“Compreender ${payload.idea || 'este tema'} com método visual claro transforma teoria em domínio prático.”`,
+    highlightQuote: `“O conhecimento organizado com clareza transforma temas complexos em aprendizado simples.”`,
     photoBase64: p.photoBase64 || null,
     photoCaption: p.photoCaption || null
   }));
@@ -1207,7 +892,6 @@ function buildLocalFallbackPresentation(payload) {
     presentationTitle: title,
     idea: payload.idea,
     subjectTheme: payload.subjectTheme,
-    templateStyle: payload.templateStyle,
     primaryColor: payload.primaryColor,
     secondaryColor: payload.secondaryColor,
     autoColors: payload.autoColors,
@@ -1215,4 +899,3 @@ function buildLocalFallbackPresentation(payload) {
     slides
   };
 }
-
