@@ -76,7 +76,7 @@ export default function PaymentModal({
         body: JSON.stringify({
           totalSlides: totalPages,
           payerName: payerName || 'Estudante',
-          payerEmail: payerEmail || `estudante.${Date.now()}@slidesdaoninha.com.br`,
+          payerEmail: payerEmail || `estudante.${Date.now()}@slidesdaanna.com.br`,
           payerCpf: payerCpf || '00000000000'
         })
       });
@@ -131,7 +131,7 @@ export default function PaymentModal({
               <QrCode size={20} color="#fff" />
             </div>
             <div>
-              <h2 className="edu-modal-title">Liberar Slides da Oninha</h2>
+              <h2 className="edu-modal-title">Liberar Slides da Anna</h2>
               <p className="edu-modal-sub">Liberação imediata via Pix sem marca d'água</p>
             </div>
           </div>

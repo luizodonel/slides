@@ -151,7 +151,7 @@ public class PdfExportService {
 
         // Subtexto
         g2.setFont(new Font("SansSerif", Font.BOLD, 40));
-        String text2 = "SLIDES DA ONINHA — PRÉ-VISUALIZAÇÃO";
+        String text2 = "SLIDES DA ANNA — PRÉ-VISUALIZAÇÃO";
         FontMetrics fm2 = g2.getFontMetrics();
         int textX2 = (WIDTH - fm2.stringWidth(text2)) / 2;
         g2.drawString(text2, textX2, HEIGHT / 2 + 65);

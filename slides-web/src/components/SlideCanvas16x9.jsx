@@ -771,7 +771,7 @@ function SlideCanvasContent({
           <div className="saf-watermark-grid">
             {Array.from({ length: 6 }).map((_, i) => (
               <span key={i} className="saf-repeat-text">
-                RASCUNHO • SLIDES DA ONINHA • PRÉ-VISUALIZAÇÃO
+                RASCUNHO • SLIDES DA ANNA • PRÉ-VISUALIZAÇÃO
               </span>
             ))}
           </div>
@@ -780,7 +780,7 @@ function SlideCanvasContent({
             <div className="saf-banner-badge">PRÉVIA DO DOCUMENTO</div>
             <div className="saf-banner-title">RASCUNHO</div>
             <div className="saf-banner-sub">
-              SLIDES DA ONINHA — PRÉ-VISUALIZAÇÃO DO PDF
+              SLIDES DA ANNA — PRÉ-VISUALIZAÇÃO DO PDF
             </div>
             <div className="saf-banner-legal">
               BAIXE O ARQUIVO OFICIAL EM ALTA DEFINIÇÃO APÓS A LIBERAÇÃO

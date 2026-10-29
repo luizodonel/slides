@@ -5,7 +5,7 @@ export default function WhatsAppSupport() {
   const [isOpen, setIsOpen] = useState(false);
   const phoneNumber = '5561985823912';
   const phoneFormatted = '(61) 9 8582-3912';
-  const defaultMessage = 'Olá! Preciso de ajuda com meus slides no Slides da Oninha.';
+  const defaultMessage = 'Olá! Preciso de ajuda com meus slides no Slides da Anna.';
   const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(defaultMessage)}`;
 
   return (

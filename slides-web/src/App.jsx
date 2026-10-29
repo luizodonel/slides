@@ -314,12 +314,23 @@ export default function App() {
     });
   };
 
+  const ensureBullets = (slide, count = 3) => {
+    const list = [...(slide?.bullets || [])];
+    while (list.length < count) {
+      list.push(`Tópico complementar 0${list.length + 1}`);
+    }
+    return list;
+  };
+
   const updateCurrentSlideBullet = (bIdx, value) => {
     if (!presentation || !presentation.slides) return;
     setPresentation((prev) => {
       const slides = [...prev.slides];
       const current = slides[activeSlideIdx];
       const bullets = [...(current.bullets || [])];
+      while (bullets.length <= bIdx) {
+        bullets.push('');
+      }
       bullets[bIdx] = value;
       slides[activeSlideIdx] = { ...current, bullets };
       return { ...prev, slides };
@@ -365,9 +376,10 @@ export default function App() {
       const current = slides[activeSlideIdx];
       const baseCols = ensureColumns(current);
       const columns = baseCols.map((c) => ({ ...c }));
-      if (columns[colIdx]) {
-        columns[colIdx] = { ...columns[colIdx], [field]: value };
+      while (columns.length <= colIdx) {
+        columns.push({ number: `0${columns.length + 1}`, title: '', description: '' });
       }
+      columns[colIdx] = { ...columns[colIdx], [field]: value };
       slides[activeSlideIdx] = { ...current, columns };
       return { ...prev, slides };
     });
@@ -667,7 +679,7 @@ export default function App() {
       const blob = await res.blob();
       const blobUrl = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
-      const safeName = (presentation.presentationTitle || 'slides-da-oninha')
+      const safeName = (presentation.presentationTitle || 'slides-da-anna')
         .toLowerCase()
         .replace(/[^a-z0-9-_]/g, '-')
         .replace(/-+/g, '-');
@@ -715,15 +727,11 @@ export default function App() {
       {/* Header */}
       <header className="edu-header no-print">
         <div className="edu-header-left">
-          <div className="edu-logo-wrapper">
-            <img
-              src="/logo-oninha.jpg"
-              alt="Logo Oninha"
-              className="edu-logo-img"
-            />
+          <div className="edu-logo" style={{ backgroundColor: displayPrimary }}>
+            <Sparkles size={18} color="#ffffff" />
           </div>
           <div>
-            <h1 className="edu-title">Slides da Oninha</h1>
+            <h1 className="edu-title">Slides da Anna</h1>
             <p className="edu-sub">Criador de Slides para Estudos e Aulas</p>
           </div>
         </div>
@@ -750,7 +758,7 @@ export default function App() {
 
         <div className="edu-header-actions">
           <a
-            href="https://wa.me/5561985823912?text=Ol%C3%A1!%20Preciso%20de%20ajuda%20com%20meus%20slides%20no%20Slides%20da%20Oninha."
+            href="https://wa.me/5561985823912?text=Ol%C3%A1!%20Preciso%20de%20ajuda%20com%20meus%20slides%20no%20Slides%20da%20Anna."
             target="_blank"
             rel="noopener noreferrer"
             className="edu-btn-whatsapp-header"
@@ -895,7 +903,7 @@ export default function App() {
                     Montamos uma apresentação exclusiva para o seu trabalho ou aula. Fale com a gente!
                   </p>
                   <a
-                    href="https://wa.me/5561985823912?text=Ol%C3%A1!%20Gostaria%20de%20um%20slide%20personalizado%20no%20Slides%20da%20Oninha."
+                    href="https://wa.me/5561985823912?text=Ol%C3%A1!%20Gostaria%20de%20um%20slide%20personalizado%20no%20Slides%20da%20Anna."
                     target="_blank"
                     rel="noopener noreferrer"
                     className="edu-btn-open-whatsapp"
@@ -1153,40 +1161,65 @@ export default function App() {
                 {currentSlide && (() => {
                   const layoutType = currentSlide.layoutType || 'split-photo-left';
 
-                  const hasSubtitle = [
-                    'cover-circle',
-                    'cover-diagonal',
-                    'split-photo-left',
-                    'columns-4',
-                    'grid-4-cards',
-                    'timeline-steps',
-                    'closing-thankyou'
+                  const hasSubtitle = ![
+                    'split-photo-right',
+                    'quote-vision'
                   ].includes(layoutType);
 
                   const hasBodyText = [
                     'split-photo-left',
                     'split-photo-right',
+                    'card-photo-duo',
                     'infographic-stats',
+                    'big-numbers-stats',
                     'closing-thankyou'
                   ].includes(layoutType);
 
                   const hasBullets = [
                     'cover-circle',
                     'cover-diagonal',
+                    'cover-minimalist',
+                    'cover-banner-hero',
                     'split-photo-left',
                     'split-photo-right',
-                    'closing-thankyou'
+                    'card-photo-duo',
+                    'table-comparison',
+                    'closing-thankyou',
+                    'closing-minimal-dark'
                   ].includes(layoutType);
 
                   const hasColumns = [
                     'columns-4',
                     'grid-4-cards',
-                    'timeline-steps'
+                    'timeline-steps',
+                    'concept-focus-circle',
+                    'columns-3-cards',
+                    'photo-full-banner',
+                    'process-horizontal-3',
+                    'table-comparison'
                   ].includes(layoutType);
 
-                  const hasStats = layoutType === 'infographic-stats';
+                  const hasStats = [
+                    'infographic-stats',
+                    'big-numbers-stats'
+                  ].includes(layoutType);
+
                   const isQuoteVision = layoutType === 'quote-vision';
                   const layoutInfo = PAGE_LAYOUTS.find((l) => l.id === layoutType);
+
+                  const maxCols = ['columns-3-cards', 'photo-full-banner', 'process-horizontal-3'].includes(layoutType)
+                    ? 3
+                    : ['table-comparison'].includes(layoutType)
+                    ? 2
+                    : 4;
+
+                  const columnsLabel = layoutType === 'concept-focus-circle'
+                    ? 'Cartões de Conceito e Aplicações (01 a 04):'
+                    : layoutType === 'table-comparison'
+                    ? 'Painéis Comparativos (01 e 02):'
+                    : layoutType === 'process-horizontal-3' || layoutType === 'timeline-steps'
+                    ? `Etapas do Fluxo (01 a 0${maxCols}):`
+                    : `Cartões e Colunas (01 a 0${maxCols}):`;
 
                   return (
                     <div className="edu-card edu-edit-fields-container">
@@ -1236,13 +1269,13 @@ export default function App() {
                         </div>
                       )}
 
-                      {/* CARTÕES E TÓPICOS 01 - 04 (SOMENTE em modelos com grade/colunas/etapas!) */}
+                      {/* CARTÕES E TÓPICOS (SOMENTE em modelos com grade/colunas/etapas/círculo central!) */}
                       {hasColumns && (
                         <div className="edu-edit-field-group">
                           <label className="edu-edit-label" style={{ color: '#38bdf8' }}>
-                            Cartões e Tópicos 01 - 04 (Grade e Colunas):
+                            {columnsLabel}
                           </label>
-                          {ensureColumns(currentSlide).slice(0, 4).map((col, cIdx) => (
+                          {ensureColumns(currentSlide).slice(0, maxCols).map((col, cIdx) => (
                             <div key={cIdx} className="edu-column-edit-card">
                               <div className="edu-column-edit-header">
                                 <span className="edu-column-num-badge">0{cIdx + 1}</span>
@@ -1254,7 +1287,18 @@ export default function App() {
                                   onChange={(e) =>
                                     updateCurrentSlideColumn(cIdx, 'title', e.target.value)
                                   }
-                                  placeholder={`Título do Cartão 0${cIdx + 1} (Ex: CONCEITO BASE)`}
+                                  placeholder={
+                                    layoutType === 'concept-focus-circle'
+                                      ? [
+                                          'CONCEITO BASE',
+                                          'DESENVOLVIMENTO',
+                                          'APLICAÇÕES',
+                                          'CONCLUSÃO'
+                                        ][cIdx] || `Título do Cartão 0${cIdx + 1}`
+                                      : layoutType === 'table-comparison'
+                                      ? (cIdx === 0 ? 'VISÃO GERAL / TÓPICO A' : 'ANÁLISE / TÓPICO B')
+                                      : `Título do Cartão 0${cIdx + 1}`
+                                  }
                                 />
                               </div>
                               <textarea
@@ -1265,18 +1309,29 @@ export default function App() {
                                 onChange={(e) =>
                                   updateCurrentSlideColumn(cIdx, 'description', e.target.value)
                                 }
-                                placeholder={`Descrição do Cartão 0${cIdx + 1} (Ex: Definição inicial e regras básicas.)`}
+                                placeholder={
+                                  layoutType === 'concept-focus-circle'
+                                    ? [
+                                        'Definição inicial e regras básicas.',
+                                        'Como aplicar na prática e exercícios.',
+                                        'Exemplos reais e resolução passo a passo.',
+                                        'Síntese final para fixação do conteúdo.'
+                                      ][cIdx] || `Descrição do Cartão 0${cIdx + 1}...`
+                                    : `Descrição / Conteúdo do Cartão 0${cIdx + 1}...`
+                                }
                               />
                             </div>
                           ))}
                         </div>
                       )}
 
-                      {/* 3 PILARES EM DESTAQUE COM CÍRCULOS */}
+                      {/* 3 PILARES OU NÚMEROS GIGANTES */}
                       {hasStats && (
                         <div className="edu-edit-field-group">
                           <label className="edu-edit-label" style={{ color: '#38bdf8' }}>
-                            3 Pilares em Destaque (Círculo, Título e Descrição):
+                            {layoutType === 'big-numbers-stats'
+                              ? '3 Métricas / Números Gigantes e Descrições:'
+                              : '3 Pilares em Destaque (Círculo, Título e Descrição):'}
                           </label>
                           {ensureStats(currentSlide).slice(0, 3).map((st, sIdx) => (
                             <div key={sIdx} className="edu-column-edit-card">
@@ -1287,7 +1342,7 @@ export default function App() {
                                   style={{ width: '85px', fontWeight: 'bold', color: '#38bdf8', textAlign: 'center' }}
                                   value={st.value || ''}
                                   onChange={(e) => updateCurrentSlideStat(sIdx, 'value', e.target.value)}
-                                  placeholder={`0${sIdx + 1}`}
+                                  placeholder={layoutType === 'big-numbers-stats' ? (sIdx === 0 ? '95%' : sIdx === 1 ? '3x' : '100%') : `0${sIdx + 1}`}
                                 />
                                 <input
                                   type="text"
@@ -1295,7 +1350,7 @@ export default function App() {
                                   style={{ flex: 1, fontWeight: 'bold' }}
                                   value={st.label || ''}
                                   onChange={(e) => updateCurrentSlideStat(sIdx, 'label', e.target.value)}
-                                  placeholder={`Título do Pilar 0${sIdx + 1}`}
+                                  placeholder={`Título do Item 0${sIdx + 1}`}
                                 />
                               </div>
                               <textarea
@@ -1304,30 +1359,40 @@ export default function App() {
                                 style={{ marginTop: 4 }}
                                 value={st.description || ''}
                                 onChange={(e) => updateCurrentSlideStat(sIdx, 'description', e.target.value)}
-                                placeholder={`Descrição do Pilar 0${sIdx + 1}`}
+                                placeholder={`Descrição do Item 0${sIdx + 1}`}
                               />
                             </div>
                           ))}
                         </div>
                       )}
 
-                      {/* TÓPICOS EM MARCADORES (SOMENTE em modelos com lista de pontos/bullets!) */}
+                      {/* TÓPICOS EM MARCADORES */}
                       {hasBullets && (
                         <div className="edu-edit-field-group">
-                          <label className="edu-edit-label">Pontos em Tópicos (Lista):</label>
-                          {(currentSlide.bullets || []).slice(0, 3).map((bullet, bIdx) => (
-                            <div key={bIdx} className="edu-bullet-edit-row">
-                              <span className="edu-bullet-num">▸ {bIdx + 1}</span>
-                              <input
-                                type="text"
-                                className="edu-edit-input"
-                                style={{ flex: 1 }}
-                                value={bullet}
-                                onChange={(e) => updateCurrentSlideBullet(bIdx, e.target.value)}
-                                placeholder={`Ponto ${bIdx + 1}...`}
-                              />
-                            </div>
-                          ))}
+                          <label className="edu-edit-label">
+                            {layoutType === 'table-comparison'
+                              ? 'Pontos dos Painéis Comparativos (até 6 tópicos):'
+                              : 'Pontos em Tópicos (Lista):'}
+                          </label>
+                          {ensureBullets(currentSlide, layoutType === 'table-comparison' ? 6 : 3)
+                            .slice(0, layoutType === 'table-comparison' ? 6 : 3)
+                            .map((bullet, bIdx) => (
+                              <div key={bIdx} className="edu-bullet-edit-row">
+                                <span className="edu-bullet-num">
+                                  {layoutType === 'table-comparison'
+                                    ? (bIdx < 3 ? `A${bIdx + 1}` : `B${bIdx - 2}`)
+                                    : `▸ ${bIdx + 1}`}
+                                </span>
+                                <input
+                                  type="text"
+                                  className="edu-edit-input"
+                                  style={{ flex: 1 }}
+                                  value={bullet}
+                                  onChange={(e) => updateCurrentSlideBullet(bIdx, e.target.value)}
+                                  placeholder={`Ponto ${bIdx + 1}...`}
+                                />
+                              </div>
+                            ))}
                         </div>
                       )}
 
