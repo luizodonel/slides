@@ -717,10 +717,7 @@ export default function App() {
                         <div
                           key={pNum}
                           className={`edu-page-row ${activeSlideIdx === idx ? 'highlight' : ''}`}
-                          onClick={() => {
-                            setActiveSlideIdx(idx);
-                            if (window.innerWidth < 960) setMobileView('preview');
-                          }}
+                          onClick={() => setActiveSlideIdx(idx)}
                         >
                           <div className="edu-page-pos" style={{ backgroundColor: displaySecondary }}>
                             {pNum}
@@ -748,7 +745,7 @@ export default function App() {
                             </select>
 
                             {/* Direct Photo Upload Control on this page */}
-                            <div className="edu-page-photo-bar">
+                            <div className="edu-page-photo-bar" onClick={(e) => e.stopPropagation()}>
                               {hasPhoto ? (
                                 <div className="edu-photo-attached">
                                   <img
@@ -757,46 +754,65 @@ export default function App() {
                                     className="edu-mini-attached-thumb"
                                   />
                                   <span className="edu-attached-name">Foto adicionada</span>
-                                  <label
-                                    htmlFor={fileInputId}
+                                  <button
+                                    type="button"
                                     className="edu-action-link"
+                                    style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
                                     title="Trocar foto"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      const inputEl = document.getElementById(fileInputId);
+                                      if (inputEl) inputEl.click();
+                                    }}
                                   >
                                     Trocar
-                                  </label>
+                                  </button>
                                   <button
                                     type="button"
                                     className="edu-photo-trash"
-                                    onClick={() => removePagePhoto(idx)}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      removePagePhoto(idx);
+                                    }}
                                     title="Remover foto"
                                   >
                                     <Trash2 size={13} />
                                   </button>
                                 </div>
                               ) : (
-                                <label htmlFor={fileInputId} className="edu-btn-add-photo">
+                                <button
+                                  type="button"
+                                  className="edu-btn-add-photo"
+                                  title="Adicionar foto a esta página"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    const inputEl = document.getElementById(fileInputId);
+                                    if (inputEl) inputEl.click();
+                                  }}
+                                >
                                   <Camera size={13} />
                                   <span>+ Foto nesta pág</span>
-                                </label>
+                                </button>
                               )}
 
                               <input
                                 id={fileInputId}
                                 type="file"
                                 accept="image/*"
+                                style={{ display: 'none' }}
                                 onChange={(e) => {
                                   if (e.target.files && e.target.files[0]) {
                                     handlePagePhotoUpload(idx, e.target.files[0]);
                                   }
                                   e.target.value = '';
                                 }}
-                                hidden
                               />
 
                               <button
                                 type="button"
                                 className="edu-btn-edit-page-content"
-                                onClick={() => {
+                                onClick={(e) => {
+                                  e.stopPropagation();
                                   setActiveSlideIdx(idx);
                                   setActiveTab('editar');
                                 }}
