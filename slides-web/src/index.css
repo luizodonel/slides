@@ -40,6 +40,28 @@ body {
   gap: 10px;
 }
 
+.edu-logo-wrapper {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 2px solid #38bdf8;
+  box-shadow: 0 2px 10px rgba(56, 189, 248, 0.35);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #ffffff;
+}
+
+.edu-logo-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top center;
+  display: block;
+}
+
 .edu-logo {
   width: 36px;
   height: 36px;
@@ -374,12 +396,87 @@ body {
   font-size: 0.74rem;
 }
 
-.edu-photo-badge {
-  display: block;
-  font-size: 0.67rem;
+.edu-page-photo-bar {
+  margin-top: 5px;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.edu-btn-add-photo {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(56, 189, 248, 0.12);
+  border: 1px dashed #38bdf8;
+  color: #38bdf8;
+  border-radius: 5px;
+  padding: 3px 8px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.edu-btn-add-photo:hover {
+  background: rgba(56, 189, 248, 0.22);
+  border-color: #7dd3fc;
+  color: #fff;
+}
+
+.edu-photo-attached {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid #10b981;
+  border-radius: 5px;
+  padding: 2px 6px;
+}
+
+.edu-mini-attached-thumb {
+  width: 22px;
+  height: 22px;
+  border-radius: 3px;
+  object-fit: cover;
+  border: 1px solid #059669;
+}
+
+.edu-attached-name {
+  font-size: 0.68rem;
   color: #34d399;
   font-weight: 600;
-  margin-top: 3px;
+}
+
+.edu-action-link {
+  font-size: 0.68rem;
+  color: #93c5fd;
+  text-decoration: underline;
+  cursor: pointer;
+  margin-left: 2px;
+}
+
+.edu-action-link:hover {
+  color: #ffffff;
+}
+
+.edu-photo-trash {
+  background: transparent;
+  border: none;
+  color: #f87171;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 2px;
+  border-radius: 3px;
+  transition: background 0.15s;
+}
+
+.edu-photo-trash:hover {
+  background: rgba(239, 68, 68, 0.2);
+  color: #fca5a5;
 }
 
 .edu-page-order-btns {
@@ -2010,4 +2107,453 @@ body {
     page-break-after: always;
     break-after: page;
   }
+}
+
+/* =========================================================
+   ANTI-FRAUD WATERMARK OVERLAY (RASCUNHO / NÃO PAGO)
+   ========================================================= */
+.slide-anti-fraud-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 80;
+  pointer-events: none;
+  user-select: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.saf-watermark-grid {
+  position: absolute;
+  inset: -60%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  transform: rotate(-24deg);
+  opacity: 0.16;
+  pointer-events: none;
+}
+
+.saf-repeat-text {
+  font-family: 'Inter', sans-serif;
+  font-size: 1.5vw;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  color: #dc2626;
+  white-space: nowrap;
+}
+
+.saf-central-banner {
+  position: relative;
+  z-index: 2;
+  width: 140%;
+  background: rgba(220, 38, 38, 0.90);
+  backdrop-filter: blur(2px);
+  transform: rotate(-18deg);
+  padding: 1.4vw 2vw;
+  text-align: center;
+  border-top: 4px solid #fde047;
+  border-bottom: 4px solid #fde047;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.65);
+  color: #ffffff;
+}
+
+.saf-banner-badge {
+  display: inline-block;
+  background: #fde047;
+  color: #991b1b;
+  font-size: 0.8vw;
+  font-weight: 900;
+  padding: 0.2vw 0.8vw;
+  border-radius: 999px;
+  letter-spacing: 0.08em;
+  margin-bottom: 0.3vw;
+}
+
+.saf-banner-title {
+  font-size: 3.2vw;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  line-height: 1.05;
+  color: #ffffff;
+  text-shadow: 2px 2px 6px rgba(0, 0, 0, 0.7);
+}
+
+.saf-banner-sub {
+  font-size: 1.05vw;
+  font-weight: 800;
+  color: #fef08a;
+  margin-top: 0.3vw;
+  letter-spacing: 0.03em;
+}
+
+.saf-banner-legal {
+  font-size: 0.78vw;
+  font-weight: 600;
+  color: #fee2e2;
+  margin-top: 0.2vw;
+  letter-spacing: 0.05em;
+}
+
+/* =========================================================
+   PAYMENT MODAL (MERCADO PAGO PIX)
+   ========================================================= */
+.edu-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  background: rgba(15, 23, 42, 0.82);
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  animation: fadeIn 0.15s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.edu-modal-card {
+  background: #0f172a;
+  border: 1px solid #334155;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 480px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.edu-modal-header {
+  padding: 18px 20px;
+  background: #1e293b;
+  border-bottom: 1px solid #334155;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.edu-modal-header-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.edu-modal-icon-badge {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.edu-modal-title {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #fff;
+  line-height: 1.2;
+}
+
+.edu-modal-sub {
+  font-size: 0.75rem;
+  color: #94a3b8;
+  margin-top: 2px;
+}
+
+.edu-modal-close {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+}
+
+.edu-modal-close:hover {
+  background: #334155;
+  color: #fff;
+}
+
+.edu-modal-body {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  overflow-y: auto;
+  max-height: 80vh;
+}
+
+.edu-modal-alert {
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid #ef4444;
+  color: #fca5a5;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 0.78rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.edu-price-summary-box {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 12px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.edu-price-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.85rem;
+  color: #94a3b8;
+}
+
+.edu-price-row strong {
+  color: #f1f5f9;
+}
+
+.edu-price-divider {
+  height: 1px;
+  background: #334155;
+  margin: 4px 0;
+}
+
+.edu-price-row.total {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #fff;
+}
+
+.edu-price-highlight {
+  font-size: 1.35rem;
+  font-weight: 900;
+}
+
+.edu-benefits-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: rgba(16, 185, 129, 0.08);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  border-radius: 10px;
+  padding: 12px 14px;
+}
+
+.edu-benefit-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.78rem;
+  color: #e2e8f0;
+}
+
+.edu-inputs-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.edu-input-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #cbd5e1;
+}
+
+.edu-modal-input {
+  background: #1e293b;
+  border: 1px solid #475569;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 0.82rem;
+  color: #fff;
+  outline: none;
+}
+
+.edu-modal-input:focus {
+  border-color: #38bdf8;
+}
+
+.edu-btn-modal-action {
+  width: 100%;
+  border: none;
+  border-radius: 10px;
+  padding: 12px;
+  color: #fff;
+  font-weight: 800;
+  font-size: 0.95rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: filter 0.15s;
+}
+
+.edu-btn-modal-action:hover {
+  filter: brightness(1.1);
+}
+
+.edu-btn-modal-action:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* QR Code step */
+.qrcode-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+
+.edu-qr-frame {
+  background: #ffffff;
+  padding: 14px;
+  border-radius: 12px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.edu-qr-img {
+  width: 180px;
+  height: 180px;
+  display: block;
+}
+
+.edu-qr-instructions {
+  text-align: center;
+}
+
+.edu-qr-instructions strong {
+  font-size: 0.88rem;
+  color: #fff;
+  display: block;
+}
+
+.edu-qr-instructions p {
+  font-size: 0.75rem;
+  color: #94a3b8;
+  margin-top: 3px;
+}
+
+.edu-pix-copy-box {
+  width: 100%;
+  display: flex;
+  gap: 6px;
+}
+
+.edu-pix-code-input {
+  flex: 1;
+  background: #1e293b;
+  border: 1px solid #475569;
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-family: monospace;
+  font-size: 0.72rem;
+  color: #94a3b8;
+  outline: none;
+}
+
+.edu-btn-copy-pix {
+  background: #2563eb;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 14px;
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.78rem;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s;
+}
+
+.edu-btn-copy-pix.copied {
+  background: #10b981;
+}
+
+.edu-polling-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.75rem;
+  color: #94a3b8;
+}
+
+.edu-test-approval-box {
+  width: 100%;
+  padding-top: 10px;
+  border-top: 1px dashed #334155;
+  display: flex;
+  justify-content: center;
+}
+
+.edu-btn-sim-test {
+  background: rgba(245, 158, 11, 0.15);
+  border: 1px solid #f59e0b;
+  color: #fbbf24;
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: 0.74rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.edu-btn-sim-test:hover {
+  background: rgba(245, 158, 11, 0.28);
+  color: #fff;
+}
+
+/* Success step */
+.success-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 12px;
+  padding: 16px 0;
+}
+
+.edu-success-badge {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: rgba(16, 185, 129, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.edu-success-title {
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: #fff;
+}
+
+.edu-success-sub {
+  font-size: 0.85rem;
+  color: #94a3b8;
+  max-width: 360px;
+  line-height: 1.4;
 }

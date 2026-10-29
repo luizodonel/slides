@@ -19,10 +19,16 @@ public class SlideController {
 
     private final SlideGeneratorService slideGeneratorService;
     private final PdfExportService pdfExportService;
+    private final com.criadorslides.service.MercadoPagoService mercadoPagoService;
 
-    public SlideController(SlideGeneratorService slideGeneratorService, PdfExportService pdfExportService) {
+    public SlideController(
+            SlideGeneratorService slideGeneratorService,
+            PdfExportService pdfExportService,
+            com.criadorslides.service.MercadoPagoService mercadoPagoService
+    ) {
         this.slideGeneratorService = slideGeneratorService;
         this.pdfExportService = pdfExportService;
+        this.mercadoPagoService = mercadoPagoService;
     }
 
     @GetMapping("/health")
@@ -37,8 +43,12 @@ public class SlideController {
     }
 
     @PostMapping("/export-pdf")
-    public ResponseEntity<byte[]> exportPdf(@RequestBody PresentationResponse presentation) throws IOException {
-        byte[] pdfBytes = pdfExportService.exportPresentationToPdf(presentation);
+    public ResponseEntity<byte[]> exportPdf(
+            @RequestBody PresentationResponse presentation,
+            @RequestParam(value = "paymentId", required = false) String paymentId
+    ) throws IOException {
+        boolean isPaid = mercadoPagoService.isPedidoAprovado(paymentId);
+        byte[] pdfBytes = pdfExportService.exportPresentationToPdf(presentation, isPaid);
 
         String safeFileName = (presentation.getPresentationTitle() != null ? presentation.getPresentationTitle() : "apresentacao")
                 .toLowerCase()
@@ -50,11 +60,15 @@ public class SlideController {
         if (safeFileName.isBlank()) {
             safeFileName = "slides";
         }
+        if (!isPaid) {
+            safeFileName = safeFileName + "-rascunho";
+        }
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_PDF);
         headers.setContentDispositionFormData("attachment", safeFileName + ".pdf");
         headers.setContentLength(pdfBytes.length);
+        headers.set("X-Presentation-Paid", String.valueOf(isPaid));
 
         return ResponseEntity.ok()
                 .headers(headers)

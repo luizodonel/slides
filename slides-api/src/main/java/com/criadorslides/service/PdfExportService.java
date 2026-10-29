@@ -32,6 +32,10 @@ public class PdfExportService {
     private static final float PDF_HEIGHT = 540f;
 
     public byte[] exportPresentationToPdf(PresentationResponse presentation) throws IOException {
+        return exportPresentationToPdf(presentation, true);
+    }
+
+    public byte[] exportPresentationToPdf(PresentationResponse presentation, boolean isPaid) throws IOException {
         Color primary = parseColor(presentation.getPrimaryColor(), new Color(249, 115, 22));
         Color secondary = parseColor(presentation.getSecondaryColor(), new Color(30, 41, 59));
         String mainTitle = presentation.getPresentationTitle() != null ? presentation.getPresentationTitle() : "APRESENTAÇÃO";
@@ -46,7 +50,7 @@ public class PdfExportService {
             if (slides != null) {
                 for (int i = 0; i < slides.size(); i++) {
                     SlidePageDto slide = slides.get(i);
-                    BufferedImage slideImg = renderSlideImage(slide, i + 1, totalPages, primary, secondary, mainTitle, subject);
+                    BufferedImage slideImg = renderSlideImage(slide, i + 1, totalPages, primary, secondary, mainTitle, subject, isPaid);
 
                     PDPage page = new PDPage(new PDRectangle(PDF_WIDTH, PDF_HEIGHT));
                     document.addPage(page);
@@ -70,7 +74,8 @@ public class PdfExportService {
             Color primary,
             Color secondary,
             String mainTitle,
-            String subject
+            String subject,
+            boolean isPaid
     ) {
         BufferedImage img = new BufferedImage(WIDTH, HEIGHT, BufferedImage.TYPE_INT_RGB);
         Graphics2D g = img.createGraphics();
@@ -104,8 +109,44 @@ public class PdfExportService {
         // Subtle Footer bar & Page Number badge
         drawSlideFooter(g, pageNum, totalPages, mainTitle, primary, secondary, layout);
 
+        if (!isPaid) {
+            drawDraftWatermark(g);
+        }
+
         g.dispose();
         return img;
+    }
+
+    private void drawDraftWatermark(Graphics2D g) {
+        Graphics2D g2 = (Graphics2D) g.create();
+        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        g2.rotate(Math.toRadians(-28), WIDTH / 2.0, HEIGHT / 2.0);
+
+        // Faixa diagonal de fundo translúcida
+        g2.setColor(new Color(220, 38, 38, 55));
+        g2.fillRect(-WIDTH, HEIGHT / 2 - 130, WIDTH * 3, 260);
+
+        // Bordas da faixa
+        g2.setColor(new Color(220, 38, 38, 140));
+        g2.setStroke(new BasicStroke(6f));
+        g2.drawRect(-WIDTH, HEIGHT / 2 - 130, WIDTH * 3, 260);
+
+        // Texto principal
+        g2.setColor(new Color(185, 28, 28, 210));
+        g2.setFont(new Font("SansSerif", Font.BOLD, 105));
+        String text1 = "RASCUNHO • NÃO PAGO";
+        FontMetrics fm1 = g2.getFontMetrics();
+        int textX1 = (WIDTH - fm1.stringWidth(text1)) / 2;
+        g2.drawString(text1, textX1, HEIGHT / 2 - 10);
+
+        // Subtexto
+        g2.setFont(new Font("SansSerif", Font.BOLD, 38));
+        String text2 = "SLIDES DA ONINHA — LIBERAÇÃO APÓS PAGAMENTO PIX";
+        FontMetrics fm2 = g2.getFontMetrics();
+        int textX2 = (WIDTH - fm2.stringWidth(text2)) / 2;
+        g2.drawString(text2, textX2, HEIGHT / 2 + 65);
+
+        g2.dispose();
     }
 
     // 1. COVER CIRCLE (Inspired by Image 1 top-left & Image 5 geometric cover)

@@ -4,19 +4,21 @@ import {
   FileDown,
   Layers,
   Palette,
-  ImagePlus,
+  Camera,
   Trash2,
   ArrowUp,
   ArrowDown,
   ChevronLeft,
   ChevronRight,
-  CheckCircle2,
   Wand2,
   BookOpen,
-  Sliders,
   Maximize2,
   Eye,
-  SlidersHorizontal
+  SlidersHorizontal,
+  Upload,
+  CreditCard,
+  Lock,
+  CheckCircle2
 } from 'lucide-react';
 import {
   SUBJECT_THEMES,
@@ -25,6 +27,7 @@ import {
 } from './data/slideTemplates';
 import LayoutMiniPreview from './components/LayoutMiniPreview';
 import SlideCanvas16x9 from './components/SlideCanvas16x9';
+import PaymentModal from './components/PaymentModal';
 
 const DEFAULT_LAYOUT_ORDER = [
   'cover-circle',
@@ -36,7 +39,7 @@ const DEFAULT_LAYOUT_ORDER = [
 ];
 
 export default function App() {
-  // Mobile/Tablet View Mode: 'edit' | 'preview'
+  // Mobile/Tablet View: 'edit' | 'preview'
   const [mobileView, setMobileView] = useState('preview');
 
   // 1. Idea & Subject
@@ -50,29 +53,34 @@ export default function App() {
   const [primaryColor, setPrimaryColor] = useState('#2563EB');
   const [secondaryColor, setSecondaryColor] = useState('#0F172A');
 
-  // 3. Pages & Layouts
+  // 3. Pages & Layouts with Direct Photo on each page
   const [totalPages, setTotalPages] = useState(4);
   const [pageConfigs, setPageConfigs] = useState(() =>
     Array.from({ length: 4 }, (_, i) => ({
       pageNumber: i + 1,
       layoutType: i === 0 ? 'cover-circle' : i === 3 ? 'closing-thankyou' : DEFAULT_LAYOUT_ORDER[i % DEFAULT_LAYOUT_ORDER.length],
-      customTitle: ''
+      customTitle: '',
+      photoBase64: null,
+      photoName: null,
+      photoCaption: ''
     }))
   );
 
-  // 4. Photos
-  const [uploadedPhotos, setUploadedPhotos] = useState([]);
-
-  // 5. Active Presentation State
+  // Active Presentation State
   const [presentation, setPresentation] = useState(null);
   const [activeSlideIdx, setActiveSlideIdx] = useState(0);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isExportingPdf, setIsExportingPdf] = useState(false);
-  const [activeTab, setActiveTab] = useState('ideia'); // 'ideia' | 'paginas' | 'fotos' | 'cores'
+  const [activeTab, setActiveTab] = useState('ideia'); // 'ideia' | 'paginas' | 'cores'
   const [fullscreenMode, setFullscreenMode] = useState(false);
   const [statusMessage, setStatusMessage] = useState('');
 
-  // Synchronize page configs when total pages change
+  // Payment State (Mercado Pago R$ 1,50 / slide)
+  const [isPaid, setIsPaid] = useState(false);
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+  const [paidPaymentId, setPaidPaymentId] = useState(null);
+
+  // Handle Total Pages Change
   const handleTotalPagesChange = (newTotal) => {
     const clamped = Math.max(2, Math.min(12, Number(newTotal) || 4));
     setTotalPages(clamped);
@@ -92,7 +100,10 @@ export default function App() {
           next.push({
             pageNumber: i + 1,
             layoutType: defaultLayout,
-            customTitle: ''
+            customTitle: '',
+            photoBase64: null,
+            photoName: null,
+            photoCaption: ''
           });
         }
       }
@@ -116,98 +127,82 @@ export default function App() {
     }
   };
 
+  // Direct Photo Upload for a specific page
+  const handlePagePhotoUpload = (index, file) => {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const base64 = reader.result;
+      setPageConfigs((prev) => {
+        const copy = [...prev];
+        copy[index] = {
+          ...copy[index],
+          photoBase64: base64,
+          photoName: file.name
+        };
+        return copy;
+      });
+
+      if (presentation && presentation.slides && presentation.slides[index]) {
+        setPresentation((prev) => {
+          const slidesCopy = [...prev.slides];
+          slidesCopy[index] = {
+            ...slidesCopy[index],
+            photoBase64: base64
+          };
+          return { ...prev, slides: slidesCopy };
+        });
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const removePagePhoto = (index) => {
+    setPageConfigs((prev) => {
+      const copy = [...prev];
+      copy[index] = {
+        ...copy[index],
+        photoBase64: null,
+        photoName: null,
+        photoCaption: ''
+      };
+      return copy;
+    });
+
+    if (presentation && presentation.slides && presentation.slides[index]) {
+      setPresentation((prev) => {
+        const slidesCopy = [...prev.slides];
+        slidesCopy[index] = {
+          ...slidesCopy[index],
+          photoBase64: null,
+          photoCaption: null
+        };
+        return { ...prev, slides: slidesCopy };
+      });
+    }
+  };
+
   const movePagePosition = (index, direction) => {
     const targetIdx = index + direction;
     if (targetIdx < 0 || targetIdx >= pageConfigs.length) return;
 
-    const pageA = index + 1;
-    const pageB = targetIdx + 1;
-
     setPageConfigs((prev) => {
       const copy = [...prev];
       const temp = copy[index];
-      copy[index] = { ...copy[targetIdx], pageNumber: pageA };
-      copy[targetIdx] = { ...temp, pageNumber: pageB };
+      copy[index] = { ...copy[targetIdx], pageNumber: index + 1 };
+      copy[targetIdx] = { ...temp, pageNumber: targetIdx + 1 };
       return copy;
     });
 
-    setUploadedPhotos((prev) =>
-      prev.map((p) => {
-        if (p.pageNumber === pageA) return { ...p, pageNumber: pageB };
-        if (p.pageNumber === pageB) return { ...p, pageNumber: pageA };
-        return p;
-      })
-    );
-  };
-
-  const handlePhotoUpload = (e) => {
-    const files = Array.from(e.target.files || []);
-    if (!files.length) return;
-
-    files.forEach((file, idx) => {
-      const reader = new FileReader();
-      reader.onload = () => {
-        const base64 = reader.result;
-        setUploadedPhotos((prev) => {
-          const usedPages = new Set(prev.map((p) => p.pageNumber));
-          let defaultPage = 1;
-          for (let p = 1; p <= totalPages; p++) {
-            if (!usedPages.has(p)) {
-              defaultPage = p;
-              break;
-            }
-          }
-          const newPhoto = {
-            id: `${Date.now()}-${idx}-${Math.random().toString(36).slice(2, 6)}`,
-            name: file.name,
-            dataUrl: base64,
-            pageNumber: defaultPage,
-            caption: ''
-          };
-          const updated = [...prev, newPhoto];
-          syncPhotosToLivePresentation(updated);
-          return updated;
-        });
-      };
-      reader.readAsDataURL(file);
-    });
-    e.target.value = '';
-  };
-
-  const updatePhotoAssignment = (photoId, field, value) => {
-    setUploadedPhotos((prev) => {
-      const updated = prev.map((item) =>
-        item.id === photoId
-          ? { ...item, [field]: field === 'pageNumber' ? Number(value) : value }
-          : item
-      );
-      syncPhotosToLivePresentation(updated);
-      return updated;
-    });
-  };
-
-  const removePhoto = (photoId) => {
-    setUploadedPhotos((prev) => {
-      const updated = prev.filter((item) => item.id !== photoId);
-      syncPhotosToLivePresentation(updated);
-      return updated;
-    });
-  };
-
-  const syncPhotosToLivePresentation = (photosList) => {
-    setPresentation((prev) => {
-      if (!prev || !prev.slides) return prev;
-      const slidesCopy = prev.slides.map((s, i) => {
-        const pageNum = i + 1;
-        const assigned = photosList.find((p) => Number(p.pageNumber) === pageNum);
-        return {
-          ...s,
-          photoBase64: assigned ? assigned.dataUrl : null,
-          photoCaption: assigned ? assigned.caption : null
-        };
+    if (presentation && presentation.slides) {
+      setPresentation((prev) => {
+        const slidesCopy = [...prev.slides];
+        const temp = slidesCopy[index];
+        slidesCopy[index] = { ...slidesCopy[targetIdx], pageNumber: index + 1 };
+        slidesCopy[targetIdx] = { ...temp, pageNumber: targetIdx + 1 };
+        return { ...prev, slides: slidesCopy };
       });
-      return { ...prev, slides: slidesCopy };
-    });
+    }
   };
 
   const getEffectiveColors = () => {
@@ -224,17 +219,13 @@ export default function App() {
     setIsGenerating(true);
     setStatusMessage('Criando slides educativos...');
 
-    const pagesPayload = pageConfigs.map((cfg, idx) => {
-      const pageNum = idx + 1;
-      const assignedPhoto = uploadedPhotos.find((p) => Number(p.pageNumber) === pageNum);
-      return {
-        pageNumber: pageNum,
-        layoutType: cfg.layoutType,
-        customTitle: cfg.customTitle || null,
-        photoBase64: assignedPhoto ? assignedPhoto.dataUrl : null,
-        photoCaption: assignedPhoto ? assignedPhoto.caption : null
-      };
-    });
+    const pagesPayload = pageConfigs.map((cfg, idx) => ({
+      pageNumber: idx + 1,
+      layoutType: cfg.layoutType,
+      customTitle: cfg.customTitle || null,
+      photoBase64: cfg.photoBase64 || null,
+      photoCaption: cfg.photoCaption || null
+    }));
 
     const payload = {
       idea,
@@ -275,10 +266,17 @@ export default function App() {
     }
   };
 
-  const handleExportPdf = async () => {
+  const handleExportPdf = async (customPaymentId = null) => {
     if (!presentation) return;
+    const effectivePaymentId = customPaymentId || paidPaymentId;
+
+    if (!isPaid && !effectivePaymentId) {
+      setIsPaymentModalOpen(true);
+      return;
+    }
+
     setIsExportingPdf(true);
-    setStatusMessage('Gerando PDF Full HD...');
+    setStatusMessage('Gerando PDF Oficial Full HD...');
 
     try {
       const exportPayload = {
@@ -287,7 +285,8 @@ export default function App() {
         secondaryColor: autoColors ? presentation.secondaryColor || effectiveSecondary : secondaryColor
       };
 
-      const res = await fetch('/api/slides/export-pdf', {
+      const url = `/api/slides/export-pdf?paymentId=${encodeURIComponent(effectivePaymentId || '')}`;
+      const res = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(exportPayload)
@@ -296,25 +295,32 @@ export default function App() {
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
       const blob = await res.blob();
-      const url = window.URL.createObjectURL(blob);
+      const blobUrl = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
-      const safeName = (presentation.presentationTitle || 'apresentacao-escolar')
+      const safeName = (presentation.presentationTitle || 'slides-da-oninha')
         .toLowerCase()
         .replace(/[^a-z0-9-_]/g, '-')
         .replace(/-+/g, '-');
-      a.href = url;
+      a.href = blobUrl;
       a.download = `${safeName || 'slides'}.pdf`;
       document.body.appendChild(a);
       a.click();
       a.remove();
-      window.URL.revokeObjectURL(url);
-      setStatusMessage('PDF baixado com sucesso!');
+      window.URL.revokeObjectURL(blobUrl);
+      setStatusMessage('PDF oficial baixado com sucesso!');
     } catch (_) {
       window.print();
-      setStatusMessage('Imprimindo ou salvando em PDF...');
+      setStatusMessage('Imprimindo apresentação...');
     } finally {
       setIsExportingPdf(false);
     }
+  };
+
+  const handlePaymentSuccess = (paymentId) => {
+    setIsPaid(true);
+    setPaidPaymentId(paymentId);
+    setStatusMessage('🎉 Pagamento aprovado! Liberando PDF oficial...');
+    handleExportPdf(paymentId);
   };
 
   useEffect(() => {
@@ -336,19 +342,23 @@ export default function App() {
 
   return (
     <div className="edu-app">
-      {/* Top Header - Compact, clean & mobile friendly */}
+      {/* Header */}
       <header className="edu-header no-print">
         <div className="edu-header-left">
-          <div className="edu-logo" style={{ backgroundColor: displayPrimary }}>
-            <BookOpen size={20} color="#fff" />
+          <div className="edu-logo-wrapper">
+            <img
+              src="/logo-oninha.jpg"
+              alt="Logo Oninha"
+              className="edu-logo-img"
+            />
           </div>
           <div>
-            <h1 className="edu-title">SlideEdu <span>IA</span></h1>
+            <h1 className="edu-title">Slides da Oninha</h1>
             <p className="edu-sub">Criador de Slides para Estudos e Aulas</p>
           </div>
         </div>
 
-        {/* Mobile View Segmented Switch */}
+        {/* Mobile View Toggle */}
         <div className="edu-mobile-toggle">
           <button
             type="button"
@@ -379,24 +389,40 @@ export default function App() {
             <span className="btn-label-desktop">{isGenerating ? 'Criando...' : 'Gerar com IA'}</span>
           </button>
 
-          <button
-            type="button"
-            className="edu-btn-download"
-            onClick={handleExportPdf}
-            disabled={isExportingPdf || !presentation}
-            style={{ backgroundColor: displayPrimary }}
-          >
-            <FileDown size={16} />
-            <span className="btn-label-desktop">{isExportingPdf ? 'Baixando...' : 'Baixar PDF'}</span>
-          </button>
+          {!isPaid ? (
+            <button
+              type="button"
+              className="edu-btn-download edu-btn-payment-trigger"
+              onClick={() => setIsPaymentModalOpen(true)}
+              style={{ backgroundColor: '#10b981' }}
+              title="Liberar sem marca d'água"
+            >
+              <CreditCard size={16} />
+              <span className="btn-label-desktop">
+                Liberar Slides (R$ {(totalPages * 1.5).toFixed(2).replace('.', ',')})
+              </span>
+            </button>
+          ) : (
+            <button
+              type="button"
+              className="edu-btn-download edu-btn-paid-download"
+              onClick={() => handleExportPdf()}
+              disabled={isExportingPdf || !presentation}
+              style={{ backgroundColor: displayPrimary }}
+              title="Baixar PDF Oficial sem rascunho"
+            >
+              <FileDown size={16} />
+              <span className="btn-label-desktop">{isExportingPdf ? 'Baixando...' : 'Baixar PDF Oficial'}</span>
+            </button>
+          )}
         </div>
       </header>
 
-      {/* Main Content Area */}
+      {/* Main Layout */}
       <div className="edu-main-layout no-print">
-        {/* Left Control Panel (Edit Mode) */}
+        {/* Left Control Panel */}
         <aside className={`edu-control-panel ${mobileView === 'edit' ? 'show-mobile' : 'hide-mobile'}`}>
-          {/* Clean Step Selector */}
+          {/* Clean 3 Tabs: 1. Ideia | 2. Páginas | 3. Cores */}
           <div className="edu-nav-tabs">
             <button
               type="button"
@@ -412,15 +438,7 @@ export default function App() {
               onClick={() => setActiveTab('paginas')}
             >
               <Layers size={16} />
-              <span>2. Páginas ({totalPages})</span>
-            </button>
-            <button
-              type="button"
-              className={activeTab === 'fotos' ? 'active' : ''}
-              onClick={() => setActiveTab('fotos')}
-            >
-              <ImagePlus size={16} />
-              <span>3. Fotos ({uploadedPhotos.length})</span>
+              <span>2. Páginas & Fotos ({totalPages})</span>
             </button>
             <button
               type="button"
@@ -428,7 +446,7 @@ export default function App() {
               onClick={() => setActiveTab('cores')}
             >
               <Palette size={16} />
-              <span>4. Cores</span>
+              <span>3. Cores</span>
             </button>
           </div>
 
@@ -441,7 +459,7 @@ export default function App() {
                   <textarea
                     rows={3}
                     className="edu-input-textarea"
-                    placeholder="Ex: Teorema de Pitágoras e aplicações práticas na construção..."
+                    placeholder="Ex: Teorema de Pitágoras e aplicações práticas na arquitetura..."
                     value={idea}
                     onChange={(e) => setIdea(e.target.value)}
                   />
@@ -482,12 +500,12 @@ export default function App() {
                   style={{ backgroundColor: displayPrimary }}
                   onClick={() => setActiveTab('paginas')}
                 >
-                  Continuar: Escolher Páginas e Layouts →
+                  Continuar: Escolher Páginas e Fotos →
                 </button>
               </div>
             )}
 
-            {/* TAB 2: QUANTIDADE DE PÁGINAS & LAYOUTS */}
+            {/* TAB 2: PÁGINAS, LAYOUTS & UPLOAD DE FOTOS DIRETO NA PÁGINA */}
             {activeTab === 'paginas' && (
               <div className="edu-tab-content">
                 <div className="edu-card">
@@ -514,13 +532,15 @@ export default function App() {
                 <div className="edu-card">
                   <label className="edu-card-title">Layout de cada página:</label>
                   <p className="edu-tip" style={{ marginBottom: 12 }}>
-                    Escolha como quer organizar cada página da apresentação:
+                    Escolha o modelo e adicione fotos diretamente na página desejada:
                   </p>
 
                   <div className="edu-page-list">
                     {pageConfigs.map((cfg, idx) => {
                       const pNum = idx + 1;
-                      const hasPhoto = uploadedPhotos.some((p) => Number(p.pageNumber) === pNum);
+                      const hasPhoto = Boolean(cfg.photoBase64);
+                      const fileInputId = `page-photo-input-${idx}`;
+
                       return (
                         <div
                           key={pNum}
@@ -554,7 +574,53 @@ export default function App() {
                                 </option>
                               ))}
                             </select>
-                            {hasPhoto && <span className="edu-photo-badge">📸 Foto nesta página</span>}
+
+                            {/* Direct Photo Upload Control on this page */}
+                            <div className="edu-page-photo-bar">
+                              {hasPhoto ? (
+                                <div className="edu-photo-attached">
+                                  <img
+                                    src={cfg.photoBase64}
+                                    alt="Foto"
+                                    className="edu-mini-attached-thumb"
+                                  />
+                                  <span className="edu-attached-name">Foto adicionada</span>
+                                  <label
+                                    htmlFor={fileInputId}
+                                    className="edu-action-link"
+                                    title="Trocar foto"
+                                  >
+                                    Trocar
+                                  </label>
+                                  <button
+                                    type="button"
+                                    className="edu-photo-trash"
+                                    onClick={() => removePagePhoto(idx)}
+                                    title="Remover foto"
+                                  >
+                                    <Trash2 size={13} />
+                                  </button>
+                                </div>
+                              ) : (
+                                <label htmlFor={fileInputId} className="edu-btn-add-photo">
+                                  <Camera size={13} />
+                                  <span>+ Foto nesta pág</span>
+                                </label>
+                              )}
+
+                              <input
+                                id={fileInputId}
+                                type="file"
+                                accept="image/*"
+                                onChange={(e) => {
+                                  if (e.target.files && e.target.files[0]) {
+                                    handlePagePhotoUpload(idx, e.target.files[0]);
+                                  }
+                                  e.target.value = '';
+                                }}
+                                hidden
+                              />
+                            </div>
                           </div>
 
                           <div className="edu-page-order-btns" onClick={(e) => e.stopPropagation()}>
@@ -583,69 +649,7 @@ export default function App() {
               </div>
             )}
 
-            {/* TAB 3: UPLOAD DE FOTOS POR PÁGINA */}
-            {activeTab === 'fotos' && (
-              <div className="edu-tab-content">
-                <div className="edu-card">
-                  <label className="edu-card-title">Adicionar Fotos ao Slide</label>
-                  <label className="edu-upload-box" style={{ borderColor: displayPrimary }}>
-                    <ImagePlus size={28} color={displayPrimary} />
-                    <strong>Toque para escolher fotos</strong>
-                    <span>Envie imagens de gráficos, fórmulas ou fotos pessoais</span>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      multiple
-                      onChange={handlePhotoUpload}
-                      hidden
-                    />
-                  </label>
-                </div>
-
-                {uploadedPhotos.length === 0 ? (
-                  <div className="edu-empty-box">
-                    Nenhuma foto enviada ainda. As páginas sem foto usarão molduras geométricas limpas automaticamente.
-                  </div>
-                ) : (
-                  <div className="edu-photo-cards">
-                    {uploadedPhotos.map((photo) => (
-                      <div key={photo.id} className="edu-photo-item">
-                        <img src={photo.dataUrl} alt={photo.name} />
-                        <div className="edu-photo-controls">
-                          <div className="edu-photo-header">
-                            <span className="edu-photo-name">{photo.name}</span>
-                            <button
-                              type="button"
-                              className="edu-del-btn"
-                              onClick={() => removePhoto(photo.id)}
-                            >
-                              <Trash2 size={14} />
-                            </button>
-                          </div>
-
-                          <label>Mostrar em qual página?</label>
-                          <select
-                            value={photo.pageNumber}
-                            onChange={(e) =>
-                              updatePhotoAssignment(photo.id, 'pageNumber', e.target.value)
-                            }
-                            className="edu-clean-select"
-                          >
-                            {Array.from({ length: totalPages }, (_, i) => i + 1).map((num) => (
-                              <option key={num} value={num}>
-                                Página {num}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* TAB 4: CORES DO TEMA */}
+            {/* TAB 3: CORES DO TEMA */}
             {activeTab === 'cores' && (
               <div className="edu-tab-content">
                 <div className="edu-card">
@@ -719,9 +723,9 @@ export default function App() {
           </div>
         </aside>
 
-        {/* Right Preview Stage (Preview Mode) */}
+        {/* Right Preview Stage */}
         <main className={`edu-stage ${mobileView === 'preview' ? 'show-mobile' : 'hide-mobile'}`}>
-          {/* Top Controls Bar for Slides Navigation */}
+          {/* Top Stage Bar */}
           <div className="edu-stage-bar">
             <div className="edu-nav-buttons">
               <button
@@ -765,7 +769,7 @@ export default function App() {
             </button>
           </div>
 
-          {/* 16:9 Slide Canvas Viewport with responsive scaling */}
+          {/* 16:9 Viewport */}
           <div className={`edu-viewport ${fullscreenMode ? 'is-fullscreen' : ''}`}>
             {fullscreenMode && (
               <button
@@ -786,51 +790,70 @@ export default function App() {
                   primaryColor={displayPrimary}
                   secondaryColor={displaySecondary}
                   presentationTitle={presentation?.presentationTitle}
+                  isPaid={isPaid}
                 />
               )}
             </div>
           </div>
 
-          {/* Bottom Filmstrip Carousel */}
+          {/* Filmstrip */}
           <div className="edu-filmstrip">
-            {(presentation?.slides || []).map((slide, idx) => (
-              <div
-                key={idx}
-                className={`edu-thumb ${activeSlideIdx === idx ? 'active' : ''}`}
-                onClick={() => setActiveSlideIdx(idx)}
-                style={{
-                  borderColor: activeSlideIdx === idx ? displayPrimary : 'transparent'
-                }}
-              >
-                <div className="edu-thumb-header">Pág. {idx + 1}</div>
-                <div className="edu-thumb-svg">
-                  <LayoutMiniPreview
-                    layoutId={slide.layoutType}
-                    primary={displayPrimary}
-                    secondary={displaySecondary}
-                  />
+            {(presentation?.slides || []).map((slide, idx) => {
+              const hasPhoto = Boolean(slide.photoBase64);
+              return (
+                <div
+                  key={idx}
+                  className={`edu-thumb ${activeSlideIdx === idx ? 'active' : ''}`}
+                  onClick={() => setActiveSlideIdx(idx)}
+                  style={{
+                    borderColor: activeSlideIdx === idx ? displayPrimary : 'transparent'
+                  }}
+                >
+                  <div className="edu-thumb-header">
+                    <span>Pág. {idx + 1}</span>
+                    {hasPhoto && <span>📸</span>}
+                  </div>
+                  <div className="edu-thumb-svg">
+                    <LayoutMiniPreview
+                      layoutId={slide.layoutType}
+                      primary={displayPrimary}
+                      secondary={displaySecondary}
+                    />
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
-          {/* Mobile Bottom Download Bar */}
+          {/* Mobile Bottom Bar */}
           <div className="edu-mobile-bottom-bar">
-            <button
-              type="button"
-              className="edu-btn-download-mobile"
-              style={{ backgroundColor: displayPrimary }}
-              onClick={handleExportPdf}
-              disabled={isExportingPdf || !presentation}
-            >
-              <FileDown size={18} />
-              {isExportingPdf ? 'Baixando PDF...' : 'Baixar Slide em PDF'}
-            </button>
+            {!isPaid ? (
+              <button
+                type="button"
+                className="edu-btn-download-mobile"
+                style={{ backgroundColor: '#10b981' }}
+                onClick={() => setIsPaymentModalOpen(true)}
+              >
+                <CreditCard size={18} />
+                <span>Liberar Slides (R$ {(totalPages * 1.5).toFixed(2).replace('.', ',')})</span>
+              </button>
+            ) : (
+              <button
+                type="button"
+                className="edu-btn-download-mobile"
+                style={{ backgroundColor: displayPrimary }}
+                onClick={() => handleExportPdf()}
+                disabled={isExportingPdf || !presentation}
+              >
+                <FileDown size={18} />
+                <span>{isExportingPdf ? 'Baixando PDF...' : 'Baixar PDF Oficial'}</span>
+              </button>
+            )}
           </div>
         </main>
       </div>
 
-      {/* Print only container for direct browser PDF generation */}
+      {/* Print only container */}
       <div className="print-only-slides">
         {(presentation?.slides || []).map((s, idx) => (
           <div key={idx} className="print-slide-page">
@@ -841,10 +864,20 @@ export default function App() {
               primaryColor={displayPrimary}
               secondaryColor={displaySecondary}
               presentationTitle={presentation?.presentationTitle}
+              isPaid={isPaid}
             />
           </div>
         ))}
       </div>
+
+      {/* Mercado Pago Payment Modal */}
+      <PaymentModal
+        isOpen={isPaymentModalOpen}
+        onClose={() => setIsPaymentModalOpen(false)}
+        totalPages={totalPages}
+        onPaymentSuccess={handlePaymentSuccess}
+        primaryColor={displayPrimary}
+      />
     </div>
   );
 }

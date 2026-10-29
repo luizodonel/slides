@@ -6,7 +6,8 @@ export default function SlideCanvas16x9({
   totalPages,
   primaryColor = '#F97316',
   secondaryColor = '#1E293B',
-  presentationTitle = 'APRESENTAÇÃO'
+  presentationTitle = 'APRESENTAÇÃO',
+  isPaid = false
 }) {
   if (!slide) return null;
 
@@ -436,6 +437,30 @@ export default function SlideCanvas16x9({
           {pageLabel}
         </span>
       </div>
+
+      {/* OVERLAY ANTI-FRAUDE / RASCUNHO NÃO PAGO */}
+      {!isPaid && (
+        <div className="slide-anti-fraud-overlay">
+          <div className="saf-watermark-grid">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <span key={i} className="saf-repeat-text">
+                RASCUNHO • SLIDES DA ONINHA • R$ 1,50/PÁGINA • NÃO PAGO
+              </span>
+            ))}
+          </div>
+
+          <div className="saf-central-banner">
+            <div className="saf-banner-badge">🔒 APRESENTAÇÃO BLOQUEADA</div>
+            <div className="saf-banner-title">RASCUNHO • NÃO PAGO</div>
+            <div className="saf-banner-sub">
+              SLIDES DA ONINHA — LIBERAÇÃO COMPLETA APÓS PAGAMENTO PIX
+            </div>
+            <div className="saf-banner-legal">
+              R$ 1,50 POR SLIDE • PAGUE PARA BAIXAR O PDF OFICIAL LIMPO EM 16:9
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
