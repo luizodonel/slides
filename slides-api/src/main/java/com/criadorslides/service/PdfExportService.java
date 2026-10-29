@@ -95,14 +95,24 @@ public class PdfExportService {
         switch (layout) {
             case "cover-circle" -> renderCoverCircle(g, slide, primary, secondary, userPhoto);
             case "cover-diagonal" -> renderCoverDiagonal(g, slide, primary, secondary, userPhoto);
+            case "cover-minimalist" -> renderCoverMinimalist(g, slide, primary, secondary, userPhoto);
+            case "cover-banner-hero" -> renderCoverBannerHero(g, slide, primary, secondary, userPhoto);
             case "split-photo-left" -> renderSplitPhotoLeft(g, slide, primary, secondary, userPhoto);
             case "split-photo-right" -> renderSplitPhotoRight(g, slide, primary, secondary, userPhoto);
+            case "photo-full-banner" -> renderPhotoFullBanner(g, slide, primary, secondary, userPhoto);
+            case "card-photo-duo" -> renderCardPhotoDuo(g, slide, primary, secondary, userPhoto);
             case "columns-4" -> renderColumns4(g, slide, primary, secondary, userPhoto);
             case "grid-4-cards" -> renderGrid4Cards(g, slide, primary, secondary, userPhoto);
+            case "columns-3-cards" -> renderColumns3Cards(g, slide, primary, secondary, userPhoto);
+            case "table-comparison" -> renderTableComparison(g, slide, primary, secondary, userPhoto);
             case "infographic-stats" -> renderInfographicStats(g, slide, primary, secondary, userPhoto);
             case "timeline-steps" -> renderTimelineSteps(g, slide, primary, secondary, userPhoto);
+            case "process-horizontal-3" -> renderProcessHorizontal3(g, slide, primary, secondary, userPhoto);
+            case "big-numbers-stats" -> renderBigNumbersStats(g, slide, primary, secondary, userPhoto);
             case "quote-vision" -> renderQuoteVision(g, slide, primary, secondary, userPhoto);
+            case "concept-focus-circle" -> renderConceptFocusCircle(g, slide, primary, secondary, userPhoto);
             case "closing-thankyou" -> renderClosingThankYou(g, slide, primary, secondary, userPhoto);
+            case "closing-minimal-dark" -> renderClosingMinimalDark(g, slide, primary, secondary, userPhoto);
             default -> renderSplitPhotoLeft(g, slide, primary, secondary, userPhoto);
         }
 
@@ -789,6 +799,616 @@ public class PdfExportService {
         }
     }
 
+    // 11. COVER MINIMALIST
+    private void renderCoverMinimalist(Graphics2D g, SlidePageDto slide, Color primary, Color secondary, BufferedImage photo) {
+        g.setColor(primary);
+        g.fillRect(0, 0, 36, HEIGHT);
+
+        g.setColor(primary);
+        g.setFont(new Font("SansSerif", Font.BOLD, 22));
+        g.drawString("●  APRESENTAÇÃO OFICIAL", 120, 160);
+
+        g.setColor(secondary);
+        g.setFont(new Font("SansSerif", Font.BOLD, 64));
+        int nextY = drawWrappedText(g, safe(slide.getTitle(), "TÍTULO PRINCIPAL"), 120, 270, 950, 76, 3);
+
+        g.setColor(primary);
+        g.fillRect(120, nextY + 12, 120, 8);
+
+        g.setColor(new Color(71, 85, 105));
+        g.setFont(new Font("SansSerif", Font.PLAIN, 28));
+        nextY = drawWrappedText(g, safe(slide.getSubtitle(), ""), 120, nextY + 62, 920, 40, 2);
+
+        List<String> bullets = slide.getBullets();
+        if (bullets != null && !bullets.isEmpty()) {
+            int by = Math.min(nextY + 50, 720);
+            for (int i = 0; i < Math.min(3, bullets.size()); i++) {
+                g.setColor(primary);
+                g.fillOval(120, by - 24, 30, 30);
+                g.setColor(Color.WHITE);
+                g.setFont(new Font("SansSerif", Font.BOLD, 18));
+                g.drawString("✓", 128, by - 2);
+
+                g.setColor(secondary);
+                g.setFont(new Font("SansSerif", Font.BOLD, 24));
+                drawWrappedText(g, bullets.get(i), 168, by - 2, 860, 32, 2);
+                by += 68;
+            }
+        }
+
+        int px = 1140, py = 150, pw = 680, ph = 780;
+        g.setColor(new Color(248, 250, 252));
+        g.fillRoundRect(px - 14, py - 14, pw + 28, ph + 28, 24, 24);
+        g.setColor(new Color(226, 232, 240));
+        g.setStroke(new BasicStroke(3f));
+        g.drawRoundRect(px - 14, py - 14, pw + 28, ph + 28, 24, 24);
+        drawPhotoOrPlaceholder(g, photo, px, py, pw, ph, primary, secondary, slide.getPhotoCaption());
+    }
+
+    // 12. COVER BANNER HERO
+    private void renderCoverBannerHero(Graphics2D g, SlidePageDto slide, Color primary, Color secondary, BufferedImage photo) {
+        g.setColor(primary);
+        g.fillRect(0, 0, WIDTH, 600);
+
+        g.setColor(Color.WHITE);
+        g.setFont(new Font("SansSerif", Font.BOLD, 22));
+        g.drawString("SLIDES DIDÁTICOS • VISÃO GERAL", 120, 150);
+
+        g.setFont(new Font("SansSerif", Font.BOLD, 64));
+        int nextY = drawWrappedText(g, safe(slide.getTitle(), "TÍTULO DA APRESENTAÇÃO"), 120, 260, 1050, 76, 2);
+
+        g.setColor(new Color(255, 255, 255, 235));
+        g.setFont(new Font("SansSerif", Font.PLAIN, 28));
+        drawWrappedText(g, safe(slide.getSubtitle(), ""), 120, nextY + 60, 1050, 40, 2);
+
+        // Circular photo badge on right of hero banner
+        int cx = 1540, cy = 300, r = 200;
+        g.setColor(Color.WHITE);
+        g.fillOval(cx - r - 8, cy - r - 8, (r + 8) * 2, (r + 8) * 2);
+        Shape oldClip = g.getClip();
+        Ellipse2D circleClip = new Ellipse2D.Double(cx - r, cy - r, r * 2, r * 2);
+        g.setClip(circleClip);
+        drawPhotoOrPlaceholder(g, photo, cx - r, cy - r, r * 2, r * 2, primary, secondary, null);
+        g.setClip(oldClip);
+
+        // Lower cards area
+        g.setColor(new Color(248, 250, 252));
+        g.fillRect(0, 600, WIDTH, 480);
+
+        List<String> bullets = slide.getBullets();
+        if (bullets == null || bullets.isEmpty()) {
+            bullets = List.of("Conceito fundamental e bases", "Aplicações práticas no cotidiano", "Síntese dos principais resultados");
+        }
+        for (int i = 0; i < Math.min(3, bullets.size()); i++) {
+            int cxBox = 120 + i * 580;
+            int cyBox = 670;
+            int cw = 520, ch = 240;
+
+            g.setColor(Color.WHITE);
+            g.fillRoundRect(cxBox, cyBox, cw, ch, 16, 16);
+            g.setColor(new Color(226, 232, 240));
+            g.setStroke(new BasicStroke(2f));
+            g.drawRoundRect(cxBox, cyBox, cw, ch, 16, 16);
+
+            g.setColor(i % 2 == 0 ? primary : secondary);
+            g.fillRect(cxBox, cyBox, cw, 8);
+
+            g.setColor(primary);
+            g.setFont(new Font("SansSerif", Font.BOLD, 36));
+            g.drawString("0" + (i + 1), cxBox + 24, cyBox + 60);
+
+            g.setColor(new Color(30, 41, 59));
+            g.setFont(new Font("SansSerif", Font.PLAIN, 24));
+            drawWrappedText(g, bullets.get(i), cxBox + 24, cyBox + 110, cw - 48, 34, 3);
+        }
+    }
+
+    // 13. PHOTO FULL BANNER
+    private void renderPhotoFullBanner(Graphics2D g, SlidePageDto slide, Color primary, Color secondary, BufferedImage photo) {
+        int bannerH = 460;
+        drawPhotoOrPlaceholder(g, photo, 0, 0, WIDTH, bannerH, primary, secondary, null);
+
+        // Semi-transparent gradient overlay for text readability
+        g.setColor(new Color(secondary.getRed(), secondary.getGreen(), secondary.getBlue(), 220));
+        g.fillRect(0, 0, WIDTH, bannerH);
+
+        g.setColor(Color.WHITE);
+        g.setFont(new Font("SansSerif", Font.BOLD, 54));
+        int nextY = drawWrappedText(g, safe(slide.getTitle(), "TÍTULO DA SEÇÃO"), 120, 210, 1680, 64, 2);
+
+        g.setColor(new Color(255, 255, 255, 230));
+        g.setFont(new Font("SansSerif", Font.PLAIN, 28));
+        drawWrappedText(g, safe(slide.getSubtitle(), ""), 120, nextY + 54, 1680, 38, 2);
+
+        g.setColor(primary);
+        g.fillRect(0, bannerH - 12, WIDTH, 12);
+
+        // Bottom 3 structured cards
+        List<SlidePageDto.ColumnItemDto> cols = slide.getColumns();
+        for (int i = 0; i < 3; i++) {
+            int cx = 120 + i * 580;
+            int cy = bannerH + 50;
+            int cw = 520, ch = 430;
+
+            g.setColor(Color.WHITE);
+            g.fillRoundRect(cx, cy, cw, ch, 16, 16);
+            g.setColor(new Color(226, 232, 240));
+            g.setStroke(new BasicStroke(2f));
+            g.drawRoundRect(cx, cy, cw, ch, 16, 16);
+
+            Color headerColor = i % 2 == 0 ? primary : secondary;
+            g.setColor(headerColor);
+            g.fillRoundRect(cx + 24, cy + 28, 48, 40, 8, 8);
+            g.setColor(Color.WHITE);
+            g.setFont(new Font("SansSerif", Font.BOLD, 22));
+            g.drawString("0" + (i + 1), cx + 38, cy + 56);
+
+            String cTitle = (cols != null && i < cols.size() && cols.get(i).getTitle() != null)
+                    ? cols.get(i).getTitle() : ("Tópico 0" + (i + 1));
+            String cDesc = (cols != null && i < cols.size() && cols.get(i).getDescription() != null)
+                    ? cols.get(i).getDescription() : "Fundamentos e metodologia de estudo prático.";
+
+            g.setColor(secondary);
+            g.setFont(new Font("SansSerif", Font.BOLD, 26));
+            drawWrappedText(g, cTitle, cx + 86, cy + 56, cw - 100, 32, 1);
+
+            g.setColor(new Color(226, 232, 240));
+            g.drawLine(cx + 24, cy + 86, cx + cw - 24, cy + 86);
+
+            g.setColor(new Color(71, 85, 105));
+            g.setFont(new Font("SansSerif", Font.PLAIN, 23));
+            drawWrappedText(g, cDesc, cx + 24, cy + 130, cw - 48, 34, 6);
+        }
+    }
+
+    // 14. CARD PHOTO DUO
+    private void renderCardPhotoDuo(Graphics2D g, SlidePageDto slide, Color primary, Color secondary, BufferedImage photo) {
+        g.setColor(secondary);
+        g.setFont(new Font("SansSerif", Font.BOLD, 48));
+        int y = drawWrappedText(g, safe(slide.getTitle(), "TÍTULO CONCEITUAL"), 120, 140, 1680, 58, 2);
+
+        g.setColor(primary);
+        g.fillRect(120, y + 10, 120, 8);
+
+        g.setColor(new Color(71, 85, 105));
+        g.setFont(new Font("SansSerif", Font.PLAIN, 26));
+        y = drawWrappedText(g, safe(slide.getSubtitle(), ""), 120, y + 54, 1680, 36, 1);
+
+        // Left text column (w = 860)
+        int lx = 120, ly = y + 40;
+        g.setColor(new Color(51, 65, 85));
+        g.setFont(new Font("SansSerif", Font.PLAIN, 24));
+        ly = drawWrappedText(g, safe(slide.getBodyText(), "Explicação detalhada dos conceitos apresentados com exemplos."), lx, ly, 860, 36, 4);
+
+        List<String> bullets = slide.getBullets();
+        if (bullets != null && !bullets.isEmpty()) {
+            int by = Math.min(ly + 30, 680);
+            for (int i = 0; i < Math.min(2, bullets.size()); i++) {
+                g.setColor(new Color(248, 250, 252));
+                g.fillRoundRect(lx, by, 860, 90, 12, 12);
+                g.setColor(i == 0 ? primary : secondary);
+                g.fillRoundRect(lx, by, 10, 90, 4, 4);
+
+                g.setColor(secondary);
+                g.setFont(new Font("SansSerif", Font.BOLD, 23));
+                drawWrappedText(g, "▸ " + bullets.get(i), lx + 30, by + 40, 810, 30, 2);
+                by += 110;
+            }
+        }
+
+        // Right photo card (w = 760, h = 680)
+        int px = 1040, py = 230, pw = 760, ph = 680;
+        g.setColor(Color.WHITE);
+        g.fillRoundRect(px - 10, py - 10, pw + 20, ph + 20, 20, 20);
+        g.setColor(primary);
+        g.setStroke(new BasicStroke(3f));
+        g.drawRoundRect(px - 10, py - 10, pw + 20, ph + 20, 20, 20);
+        drawPhotoOrPlaceholder(g, photo, px, py, pw, ph, primary, secondary, slide.getPhotoCaption());
+    }
+
+    // 15. COLUMNS 3 CARDS
+    private void renderColumns3Cards(Graphics2D g, SlidePageDto slide, Color primary, Color secondary, BufferedImage photo) {
+        g.setColor(secondary);
+        g.fillRect(0, 0, WIDTH, 240);
+        g.setColor(primary);
+        g.fillRect(0, 240, WIDTH, 12);
+
+        g.setColor(Color.WHITE);
+        g.setFont(new Font("SansSerif", Font.BOLD, 50));
+        drawWrappedText(g, safe(slide.getTitle(), "PILARES PRINCIPAIS"), 120, 130, 1400, 58, 1);
+
+        g.setColor(new Color(255, 255, 255, 220));
+        g.setFont(new Font("SansSerif", Font.PLAIN, 26));
+        g.drawString(truncate(safe(slide.getSubtitle(), ""), 90), 120, 200);
+
+        if (photo != null) {
+            drawPhotoOrPlaceholder(g, photo, 1600, 30, 220, 160, primary, secondary, null);
+        }
+
+        List<SlidePageDto.ColumnItemDto> cols = slide.getColumns();
+        for (int i = 0; i < 3; i++) {
+            boolean isCenter = (i == 1);
+            int cx = 120 + i * 580;
+            int cy = 290;
+            int cw = 520, ch = 660;
+
+            Color cardBg = isCenter ? primary : new Color(248, 250, 252);
+            Color titleColor = isCenter ? Color.WHITE : secondary;
+            Color textColor = isCenter ? new Color(255, 255, 255, 235) : new Color(71, 85, 105);
+
+            g.setColor(cardBg);
+            g.fillRoundRect(cx, cy, cw, ch, 20, 20);
+            g.setColor(new Color(226, 232, 240));
+            g.setStroke(new BasicStroke(2f));
+            g.drawRoundRect(cx, cy, cw, ch, 20, 20);
+
+            // Badge
+            Color badgeBg = isCenter ? secondary : primary;
+            g.setColor(badgeBg);
+            g.fillRoundRect(cx + 30, cy + 34, 60, 40, 10, 10);
+            g.setColor(Color.WHITE);
+            g.setFont(new Font("SansSerif", Font.BOLD, 22));
+            g.drawString("0" + (i + 1), cx + 46, cy + 62);
+
+            String cTitle = (cols != null && i < cols.size() && cols.get(i).getTitle() != null)
+                    ? cols.get(i).getTitle() : ("Pilar 0" + (i + 1));
+            String cDesc = (cols != null && i < cols.size() && cols.get(i).getDescription() != null)
+                    ? cols.get(i).getDescription() : "Fundamentos teóricos e desdobramentos práticos essenciais.";
+
+            g.setColor(titleColor);
+            g.setFont(new Font("SansSerif", Font.BOLD, 30));
+            int ny = drawWrappedText(g, cTitle, cx + 30, cy + 130, cw - 60, 36, 2);
+
+            g.setColor(isCenter ? new Color(255, 255, 255, 120) : primary);
+            g.fillRect(cx + 30, ny + 10, 60, 5);
+
+            g.setColor(textColor);
+            g.setFont(new Font("SansSerif", Font.PLAIN, 24));
+            drawWrappedText(g, cDesc, cx + 30, ny + 50, cw - 60, 36, 8);
+        }
+    }
+
+    // 16. TABLE COMPARISON
+    private void renderTableComparison(Graphics2D g, SlidePageDto slide, Color primary, Color secondary, BufferedImage photo) {
+        g.setColor(secondary);
+        g.setFont(new Font("SansSerif", Font.BOLD, 48));
+        int y = drawWrappedText(g, safe(slide.getTitle(), "QUADRO COMPARATIVO"), 120, 140, 1680, 58, 2);
+
+        g.setColor(primary);
+        g.fillRect(120, y + 10, 100, 8);
+
+        g.setColor(new Color(71, 85, 105));
+        g.setFont(new Font("SansSerif", Font.PLAIN, 26));
+        drawWrappedText(g, safe(slide.getSubtitle(), ""), 120, y + 54, 1680, 36, 1);
+
+        int panelY = 240;
+        int panelW = 810;
+        int panelH = 700;
+
+        // Left Panel (Primary Header)
+        g.setColor(new Color(248, 250, 252));
+        g.fillRoundRect(120, panelY, panelW, panelH, 20, 20);
+        g.setColor(primary);
+        g.fillRoundRect(120, panelY, panelW, 70, 20, 20);
+        g.fillRect(120, panelY + 40, panelW, 30);
+        g.setColor(Color.WHITE);
+        g.setFont(new Font("SansSerif", Font.BOLD, 26));
+        String titleA = (slide.getColumns() != null && !slide.getColumns().isEmpty() && slide.getColumns().get(0).getTitle() != null)
+                ? slide.getColumns().get(0).getTitle() : "VISÃO GERAL / TÓPICO A";
+        g.drawString(truncate(titleA.toUpperCase(), 35), 150, panelY + 45);
+
+        List<String> bulletsA = slide.getBullets();
+        if (bulletsA == null || bulletsA.isEmpty()) {
+            bulletsA = List.of("Fundamentos teóricos e conceitos-base", "Aplicações práticas e resolução de exemplos", "Metodologia estruturada e eficiência");
+        }
+        int byA = panelY + 120;
+        for (int i = 0; i < Math.min(3, bulletsA.size()); i++) {
+            g.setColor(primary);
+            g.setFont(new Font("SansSerif", Font.BOLD, 26));
+            g.drawString("✔", 150, byA + 10);
+            g.setColor(new Color(30, 41, 59));
+            g.setFont(new Font("SansSerif", Font.PLAIN, 24));
+            drawWrappedText(g, bulletsA.get(i), 190, byA + 10, panelW - 90, 34, 3);
+            byA += 130;
+        }
+
+        // Right Panel (Secondary Header)
+        int rx = 990;
+        g.setColor(new Color(248, 250, 252));
+        g.fillRoundRect(rx, panelY, panelW, panelH, 20, 20);
+        g.setColor(secondary);
+        g.fillRoundRect(rx, panelY, panelW, 70, 20, 20);
+        g.fillRect(rx, panelY + 40, panelW, 30);
+        g.setColor(Color.WHITE);
+        g.setFont(new Font("SansSerif", Font.BOLD, 26));
+        String titleB = (slide.getColumns() != null && slide.getColumns().size() > 1 && slide.getColumns().get(1).getTitle() != null)
+                ? slide.getColumns().get(1).getTitle() : "ANÁLISE COMPARATIVA / TÓPICO B";
+        g.drawString(truncate(titleB.toUpperCase(), 35), rx + 30, panelY + 45);
+
+        int byB = panelY + 120;
+        List<String> bulletsB = (bulletsA.size() > 3) ? bulletsA.subList(3, Math.min(6, bulletsA.size()))
+                : List.of("Aprofundamento e estudos de caso", "Análise comparativa de desfechos", "Resultados consolidados e conclusões");
+        for (int i = 0; i < Math.min(3, bulletsB.size()); i++) {
+            g.setColor(secondary);
+            g.setFont(new Font("SansSerif", Font.BOLD, 26));
+            g.drawString("✔", rx + 30, byB + 10);
+            g.setColor(new Color(30, 41, 59));
+            g.setFont(new Font("SansSerif", Font.PLAIN, 24));
+            drawWrappedText(g, bulletsB.get(i), rx + 70, byB + 10, panelW - 90, 34, 3);
+            byB += 130;
+        }
+    }
+
+    // 17. PROCESS HORIZONTAL 3
+    private void renderProcessHorizontal3(Graphics2D g, SlidePageDto slide, Color primary, Color secondary, BufferedImage photo) {
+        g.setColor(primary);
+        g.setFont(new Font("SansSerif", Font.BOLD, 22));
+        g.drawString("FLUXO DE ETAPAS • PROCESSO", 120, 130);
+
+        g.setColor(secondary);
+        g.setFont(new Font("SansSerif", Font.BOLD, 48));
+        int y = drawWrappedText(g, safe(slide.getTitle(), "PROCESSO PASSO A PASSO"), 120, 210, 1680, 58, 2);
+
+        g.setColor(primary);
+        g.fillRect(120, y + 10, 100, 8);
+
+        g.setColor(new Color(71, 85, 105));
+        g.setFont(new Font("SansSerif", Font.PLAIN, 26));
+        drawWrappedText(g, safe(slide.getSubtitle(), ""), 120, y + 54, 1680, 36, 1);
+
+        // Connecting dashed line
+        g.setColor(new Color(secondary.getRed(), secondary.getGreen(), secondary.getBlue(), 50));
+        g.setStroke(new BasicStroke(4f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND, 0, new float[]{12, 12}, 0));
+        g.drawLine(380, 480, 1540, 480);
+        g.setStroke(new BasicStroke(1f));
+
+        List<SlidePageDto.ColumnItemDto> cols = slide.getColumns();
+        for (int i = 0; i < 3; i++) {
+            int cx = 120 + i * 580;
+            int cw = 520;
+            int nodeX = cx + cw / 2;
+            int nodeY = 480;
+
+            // Number node circle
+            Color nodeColor = i % 2 == 0 ? primary : secondary;
+            g.setColor(nodeColor);
+            g.fillOval(nodeX - 44, nodeY - 44, 88, 88);
+            g.setColor(Color.WHITE);
+            g.setStroke(new BasicStroke(5f));
+            g.drawOval(nodeX - 44, nodeY - 44, 88, 88);
+            g.setFont(new Font("SansSerif", Font.BOLD, 36));
+            FontMetrics fm = g.getFontMetrics();
+            String nStr = "0" + (i + 1);
+            g.drawString(nStr, nodeX - fm.stringWidth(nStr) / 2, nodeY + 12);
+
+            // Step card
+            int cy = 560, ch = 380;
+            g.setColor(new Color(248, 250, 252));
+            g.fillRoundRect(cx, cy, cw, ch, 16, 16);
+            g.setColor(new Color(226, 232, 240));
+            g.setStroke(new BasicStroke(2f));
+            g.drawRoundRect(cx, cy, cw, ch, 16, 16);
+
+            String cTitle = (cols != null && i < cols.size() && cols.get(i).getTitle() != null)
+                    ? cols.get(i).getTitle() : ("Fase 0" + (i + 1));
+            String cDesc = (cols != null && i < cols.size() && cols.get(i).getDescription() != null)
+                    ? cols.get(i).getDescription() : "Definição de objetivos, execução metodológica e validação.";
+
+            g.setColor(secondary);
+            g.setFont(new Font("SansSerif", Font.BOLD, 28));
+            drawWrappedText(g, cTitle, cx + 24, cy + 60, cw - 48, 34, 2);
+
+            g.setColor(new Color(71, 85, 105));
+            g.setFont(new Font("SansSerif", Font.PLAIN, 23));
+            drawWrappedText(g, cDesc, cx + 24, cy + 130, cw - 48, 34, 6);
+
+            // Arrow
+            if (i < 2) {
+                g.setColor(primary);
+                g.setFont(new Font("SansSerif", Font.BOLD, 36));
+                g.drawString("➔", cx + cw + 15, nodeY + 12);
+            }
+        }
+    }
+
+    // 18. BIG NUMBERS STATS
+    private void renderBigNumbersStats(Graphics2D g, SlidePageDto slide, Color primary, Color secondary, BufferedImage photo) {
+        // Left primary column
+        int colW = 760;
+        g.setColor(primary);
+        g.fillRect(0, 0, colW, HEIGHT);
+
+        g.setColor(Color.WHITE);
+        g.setFont(new Font("SansSerif", Font.BOLD, 54));
+        int nextY = drawWrappedText(g, safe(slide.getTitle(), "MÉTRICAS & INDICADORES"), 100, 260, colW - 160, 64, 3);
+
+        g.setColor(secondary);
+        g.fillRect(100, nextY + 12, 100, 8);
+
+        g.setColor(new Color(255, 255, 255, 235));
+        g.setFont(new Font("SansSerif", Font.PLAIN, 28));
+        nextY = drawWrappedText(g, safe(slide.getSubtitle(), ""), 100, nextY + 60, colW - 160, 40, 3);
+
+        g.setColor(new Color(255, 255, 255, 210));
+        g.setFont(new Font("SansSerif", Font.PLAIN, 24));
+        drawWrappedText(g, safe(slide.getBodyText(), ""), 100, nextY + 30, colW - 160, 36, 4);
+
+        // Right side 3 stat cards
+        List<SlidePageDto.StatItemDto> stats = slide.getStats();
+        int rx = 860, rw = 940;
+        int startY = 140;
+        for (int i = 0; i < 3; i++) {
+            int cy = startY + i * 270;
+            int ch = 220;
+
+            g.setColor(new Color(248, 250, 252));
+            g.fillRoundRect(rx, cy, rw, ch, 16, 16);
+            g.setColor(new Color(226, 232, 240));
+            g.setStroke(new BasicStroke(2f));
+            g.drawRoundRect(rx, cy, rw, ch, 16, 16);
+
+            String val = (stats != null && i < stats.size() && stats.get(i).getValue() != null)
+                    ? stats.get(i).getValue() : ("0" + (i + 1));
+            String label = (stats != null && i < stats.size() && stats.get(i).getLabel() != null)
+                    ? stats.get(i).getLabel() : ("Indicador 0" + (i + 1));
+            String desc = (stats != null && i < stats.size() && stats.get(i).getDescription() != null)
+                    ? stats.get(i).getDescription() : "Resultados expressivos e evolução contínua.";
+
+            // Big number
+            g.setColor(i % 2 == 0 ? primary : secondary);
+            g.setFont(new Font("SansSerif", Font.BOLD, 76));
+            g.drawString(val, rx + 40, cy + 130);
+
+            // Label & description
+            g.setColor(secondary);
+            g.setFont(new Font("SansSerif", Font.BOLD, 30));
+            drawWrappedText(g, label, rx + 240, cy + 60, rw - 270, 36, 1);
+
+            g.setColor(new Color(71, 85, 105));
+            g.setFont(new Font("SansSerif", Font.PLAIN, 23));
+            drawWrappedText(g, desc, rx + 240, cy + 110, rw - 270, 32, 3);
+        }
+    }
+
+    // 19. CONCEPT FOCUS CIRCLE
+    private void renderConceptFocusCircle(Graphics2D g, SlidePageDto slide, Color primary, Color secondary, BufferedImage photo) {
+        g.setColor(secondary);
+        g.setFont(new Font("SansSerif", Font.BOLD, 48));
+        drawWrappedText(g, safe(slide.getTitle(), "CONCEITO CENTRAL"), 120, 110, 1680, 56, 1);
+
+        g.setColor(new Color(71, 85, 105));
+        g.setFont(new Font("SansSerif", Font.PLAIN, 24));
+        g.drawString(truncate(safe(slide.getSubtitle(), ""), 90), 120, 160);
+
+        List<SlidePageDto.ColumnItemDto> cols = slide.getColumns();
+
+        // 2 Left cards
+        for (int i = 0; i < 2; i++) {
+            int cx = 120, cy = 250 + i * 320, cw = 540, ch = 280;
+            g.setColor(new Color(248, 250, 252));
+            g.fillRoundRect(cx, cy, cw, ch, 16, 16);
+            g.setColor(primary);
+            g.fillRoundRect(cx, cy, 12, ch, 6, 6);
+
+            String cTitle = (cols != null && i < cols.size() && cols.get(i).getTitle() != null)
+                    ? cols.get(i).getTitle() : ("Fundamento 0" + (i + 1));
+            String cDesc = (cols != null && i < cols.size() && cols.get(i).getDescription() != null)
+                    ? cols.get(i).getDescription() : "Estrutura teórica e base conceitual aplicada ao tema.";
+
+            g.setColor(secondary);
+            g.setFont(new Font("SansSerif", Font.BOLD, 28));
+            drawWrappedText(g, cTitle, cx + 34, cy + 50, cw - 50, 34, 1);
+
+            g.setColor(new Color(71, 85, 105));
+            g.setFont(new Font("SansSerif", Font.PLAIN, 23));
+            drawWrappedText(g, cDesc, cx + 34, cy + 110, cw - 50, 32, 4);
+        }
+
+        // Center hub circle
+        int hubX = 960, hubY = 560, r = 180;
+        g.setColor(secondary);
+        g.fillOval(hubX - r, hubY - r, r * 2, r * 2);
+        g.setColor(primary);
+        g.setStroke(new BasicStroke(8f));
+        g.drawOval(hubX - r, hubY - r, r * 2, r * 2);
+
+        int ir = 130;
+        g.setColor(primary);
+        g.fillOval(hubX - ir, hubY - ir, ir * 2, ir * 2);
+        g.setColor(Color.WHITE);
+        g.setFont(new Font("SansSerif", Font.BOLD, 28));
+        String hubTxt = safe(slide.getTitle(), "CONCEITO");
+        drawWrappedText(g, hubTxt, hubX - ir + 20, hubY - 20, ir * 2 - 40, 34, 3);
+
+        // 2 Right cards
+        for (int i = 0; i < 2; i++) {
+            int cxR = 1260, cy = 250 + i * 320, cw = 540, ch = 280;
+            g.setColor(new Color(248, 250, 252));
+            g.fillRoundRect(cxR, cy, cw, ch, 16, 16);
+            g.setColor(secondary);
+            g.fillRoundRect(cxR + cw - 12, cy, 12, ch, 6, 6);
+
+            String cTitle = (cols != null && (i + 2) < cols.size() && cols.get(i + 2).getTitle() != null)
+                    ? cols.get(i + 2).getTitle() : ("Aplicação 0" + (i + 3));
+            String cDesc = (cols != null && (i + 2) < cols.size() && cols.get(i + 2).getDescription() != null)
+                    ? cols.get(i + 2).getDescription() : "Resultados práticos observados na aplicação do método.";
+
+            g.setColor(secondary);
+            g.setFont(new Font("SansSerif", Font.BOLD, 28));
+            drawWrappedText(g, cTitle, cxR + 24, cy + 50, cw - 50, 34, 1);
+
+            g.setColor(new Color(71, 85, 105));
+            g.setFont(new Font("SansSerif", Font.PLAIN, 23));
+            drawWrappedText(g, cDesc, cxR + 24, cy + 110, cw - 50, 32, 4);
+        }
+    }
+
+    // 20. CLOSING MINIMAL DARK
+    private void renderClosingMinimalDark(Graphics2D g, SlidePageDto slide, Color primary, Color secondary, BufferedImage photo) {
+        g.setColor(secondary);
+        g.fillRect(0, 0, WIDTH, HEIGHT);
+
+        // Left accent stripe
+        g.setColor(primary);
+        g.fillRect(0, 0, 24, HEIGHT);
+
+        g.setColor(primary);
+        g.setFont(new Font("SansSerif", Font.BOLD, 22));
+        g.drawString("SÍNTESE & CONCLUSÃO", 120, 160);
+
+        g.setColor(Color.WHITE);
+        g.setFont(new Font("SansSerif", Font.BOLD, 68));
+        String title = safe(slide.getTitle(), "MUITO OBRIGADO!");
+        int nextY = drawWrappedText(g, title, 120, 260, 950, 78, 2);
+
+        g.setColor(primary);
+        g.fillRect(120, nextY + 12, 120, 8);
+
+        g.setColor(new Color(255, 255, 255, 235));
+        g.setFont(new Font("SansSerif", Font.PLAIN, 28));
+        nextY = drawWrappedText(g, safe(slide.getSubtitle(), "Apresentação desenvolvida com clareza e método."), 120, nextY + 62, 920, 40, 2);
+
+        List<String> bullets = slide.getBullets();
+        if (bullets != null && !bullets.isEmpty()) {
+            int by = Math.min(nextY + 50, 720);
+            for (int i = 0; i < Math.min(3, bullets.size()); i++) {
+                g.setColor(primary);
+                g.setFont(new Font("SansSerif", Font.BOLD, 26));
+                g.drawString("✔", 120, by + 10);
+
+                g.setColor(new Color(203, 213, 225));
+                g.setFont(new Font("SansSerif", Font.PLAIN, 24));
+                drawWrappedText(g, bullets.get(i), 160, by + 10, 880, 32, 2);
+                by += 68;
+            }
+        }
+
+        // Right completion box
+        int px = 1160, py = 220, pw = 640, ph = 620;
+        g.setColor(new Color(255, 255, 255, 10));
+        g.fillRoundRect(px, py, pw, ph, 20, 20);
+        g.setColor(primary);
+        g.setStroke(new BasicStroke(2f));
+        g.drawRoundRect(px, py, pw, ph, 20, 20);
+
+        g.setColor(primary);
+        g.fillRoundRect(px, py, pw, 70, 20, 20);
+        g.fillRect(px, py + 40, pw, 30);
+        g.setColor(Color.WHITE);
+        g.setFont(new Font("SansSerif", Font.BOLD, 26));
+        g.drawString("RESUMO FINAL", px + 40, py + 46);
+
+        g.setColor(new Color(203, 213, 225));
+        g.setFont(new Font("SansSerif", Font.PLAIN, 24));
+        drawWrappedText(g, "Perguntas, dúvidas e feedback são bem-vindos! Obrigado pela atenção.", px + 40, py + 140, pw - 80, 36, 4);
+
+        g.setColor(new Color(primary.getRed(), primary.getGreen(), primary.getBlue(), 50));
+        g.fillRoundRect(px + 40, py + 340, 320, 50, 25, 25);
+        g.setColor(Color.WHITE);
+        g.setFont(new Font("SansSerif", Font.BOLD, 20));
+        g.drawString("Concluído com Sucesso", px + 80, py + 372);
+    }
+
     private void drawPhotoOrPlaceholder(
             Graphics2D g,
             BufferedImage photo,
@@ -870,7 +1490,7 @@ public class PdfExportService {
             Color secondary,
             String layout
     ) {
-        boolean darkSlide = "closing-thankyou".equals(layout);
+        boolean darkSlide = "closing-thankyou".equals(layout) || "closing-minimal-dark".equals(layout);
         Color textColor = darkSlide ? new Color(203, 213, 225) : new Color(100, 116, 139);
 
         // Page badge at bottom right

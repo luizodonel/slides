@@ -121,6 +121,7 @@ export const COLOR_PALETTES = [
 ];
 
 export const PAGE_LAYOUTS = [
+  // --- 1. CAPA (4 Modelos) ---
   {
     id: 'cover-circle',
     name: 'Capa Geométrica com Foto Circular',
@@ -136,6 +137,22 @@ export const PAGE_LAYOUTS = [
     description: 'Corte diagonal com faixa dupla nas 2 cores do tema e área de foto panorâmica à direita.'
   },
   {
+    id: 'cover-minimalist',
+    name: 'Capa Minimalista com Moldura',
+    category: 'Capa',
+    supportsPhoto: true,
+    description: 'Design editorial limpo com pilar lateral colorido, tipografia forte e foto em moldura elegante.'
+  },
+  {
+    id: 'cover-banner-hero',
+    name: 'Capa Hero Banner Horizontal',
+    category: 'Capa',
+    supportsPhoto: true,
+    description: 'Grande faixa superior de alto contraste para o título e base com 3 selos de tópicos e foto.'
+  },
+
+  // --- 2. CONTEÚDO & FOTO (4 Modelos) ---
+  {
     id: 'split-photo-left',
     name: 'Foto à Esquerda + Conteúdo Estruturado',
     category: 'Conteúdo & Foto',
@@ -149,6 +166,22 @@ export const PAGE_LAYOUTS = [
     supportsPhoto: true,
     description: 'Explicação detalhada e cartões de destaque à esquerda com foto emoldurada à direita.'
   },
+  {
+    id: 'photo-full-banner',
+    name: 'Banner de Foto Superior + Tópicos',
+    category: 'Conteúdo & Foto',
+    supportsPhoto: true,
+    description: 'Faixa superior widescreen com foto e painel inferior organizado em 3 cartões didáticos.'
+  },
+  {
+    id: 'card-photo-duo',
+    name: 'Foto em Card Central + Resumo',
+    category: 'Conteúdo & Foto',
+    supportsPhoto: true,
+    description: 'Explicação detalhada em duas seções balanceadas com foto centralizada em cartão flutuante.'
+  },
+
+  // --- 3. ESTRUTURA (4 Modelos) ---
   {
     id: 'columns-4',
     name: '4 Colunas Numeradas (01, 02, 03, 04)',
@@ -164,6 +197,22 @@ export const PAGE_LAYOUTS = [
     description: 'Cabeçalho colorido superior e 4 cartões organizados em grade 2x2 com selos em destaque.'
   },
   {
+    id: 'columns-3-cards',
+    name: '3 Colunas Grandes com Destaque Central',
+    category: 'Estrutura',
+    supportsPhoto: true,
+    description: 'Três blocos verticais espaçosos para explicar conceitos em trio, com o cartão central em destaque.'
+  },
+  {
+    id: 'table-comparison',
+    name: 'Comparativo em 2 Painéis Contrastantes',
+    category: 'Estrutura',
+    supportsPhoto: true,
+    description: 'Dois grandes painéis lado a lado para contrastar conceitos, prós e contras ou fases.'
+  },
+
+  // --- 4. PILARES & PROCESSO (4 Modelos) ---
+  {
     id: 'infographic-stats',
     name: '3 Pilares em Destaque com Círculos',
     category: 'Pilares & Destaques',
@@ -178,6 +227,22 @@ export const PAGE_LAYOUTS = [
     description: 'Fluxo horizontal conectado em 4 etapas sequenciais para processos históricos, químicos ou matemáticos.'
   },
   {
+    id: 'process-horizontal-3',
+    name: 'Fluxo de 3 Fases com Setas Conectoras',
+    category: 'Processo',
+    supportsPhoto: true,
+    description: 'Linha contínua conectando 3 fases amplas com números circulares e setas indicativas de evolução.'
+  },
+  {
+    id: 'big-numbers-stats',
+    name: 'Métricas & Dados com 3 Números Gigantes',
+    category: 'Pilares & Destaques',
+    supportsPhoto: true,
+    description: 'Coluna conceitual à esquerda e 3 números gigantes em destaque à direita com títulos e explicações.'
+  },
+
+  // --- 5. CONCEITO & ENCERRAMENTO (4 Modelos) ---
+  {
     id: 'quote-vision',
     name: 'Destaque / Fórmula + Visão & Missão',
     category: 'Conceito',
@@ -185,11 +250,25 @@ export const PAGE_LAYOUTS = [
     description: 'Grande bloco de citação/fórmula à esquerda combinado com 2 cartões comparativos à direita.'
   },
   {
+    id: 'concept-focus-circle',
+    name: 'Conceito Central em Círculo + 4 Tópicos',
+    category: 'Conceito',
+    supportsPhoto: true,
+    description: 'Círculo focal central com o conceito-chave rodeado por 4 cartões explicativos simétricos.'
+  },
+  {
     id: 'closing-thankyou',
     name: 'Encerramento & Resumo Final',
     category: 'Encerramento',
     supportsPhoto: true,
     description: 'Fundo na cor secundária, blocos geométricos em 3 tons, síntese final e quadro de foto à direita.'
+  },
+  {
+    id: 'closing-minimal-dark',
+    name: 'Encerramento Moderno de Alto Contraste',
+    category: 'Encerramento',
+    supportsPhoto: true,
+    description: 'Tela escura corporativa com mensagem final impactante, 3 tópicos de fixação e selo de conclusão.'
   }
 ];
 
