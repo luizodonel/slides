@@ -18,7 +18,11 @@ import {
   Upload,
   CreditCard,
   Lock,
-  CheckCircle2
+  CheckCircle2,
+  Edit3,
+  Plus,
+  MessageCircle,
+  FileText
 } from 'lucide-react';
 import {
   SUBJECT_THEMES,
@@ -29,7 +33,7 @@ import LayoutMiniPreview from './components/LayoutMiniPreview';
 import SlideCanvas16x9 from './components/SlideCanvas16x9';
 import PaymentModal from './components/PaymentModal';
 import PdfPreviewModal from './components/PdfPreviewModal';
-import { FileText } from 'lucide-react';
+import WhatsAppSupport from './components/WhatsAppSupport';
 
 const DEFAULT_LAYOUT_ORDER = [
   'cover-circle',
@@ -208,6 +212,102 @@ export default function App() {
     }
   };
 
+  // Atualização em Tempo Real da Ideia/Tema
+  const handleIdeaChange = (newIdea) => {
+    setIdea(newIdea);
+    if (presentation && presentation.slides) {
+      setPresentation((prev) => {
+        const slides = [...prev.slides];
+        if (slides.length > 0) {
+          slides[0] = {
+            ...slides[0],
+            title: newIdea ? newIdea.toUpperCase() : 'SEU TEMA AQUI',
+            subtitle: newIdea
+              ? `Compreendendo os conceitos essenciais e a lógica de ${newIdea}.`
+              : slides[0].subtitle
+          };
+        }
+        return {
+          ...prev,
+          presentationTitle: newIdea || 'Apresentação',
+          slides
+        };
+      });
+    }
+  };
+
+  // Edição em Tempo Real dos Campos do Slide Ativo
+  const updateCurrentSlideField = (field, value) => {
+    if (!presentation || !presentation.slides) return;
+    setPresentation((prev) => {
+      const slides = [...prev.slides];
+      slides[activeSlideIdx] = {
+        ...slides[activeSlideIdx],
+        [field]: value
+      };
+      return { ...prev, slides };
+    });
+  };
+
+  const updateCurrentSlideBullet = (bIdx, value) => {
+    if (!presentation || !presentation.slides) return;
+    setPresentation((prev) => {
+      const slides = [...prev.slides];
+      const current = slides[activeSlideIdx];
+      const bullets = [...(current.bullets || [])];
+      bullets[bIdx] = value;
+      slides[activeSlideIdx] = { ...current, bullets };
+      return { ...prev, slides };
+    });
+  };
+
+  const addCurrentSlideBullet = () => {
+    if (!presentation || !presentation.slides) return;
+    setPresentation((prev) => {
+      const slides = [...prev.slides];
+      const current = slides[activeSlideIdx];
+      const bullets = [...(current.bullets || []), 'Novo ponto ou conceito relevante'];
+      slides[activeSlideIdx] = { ...current, bullets };
+      return { ...prev, slides };
+    });
+  };
+
+  const removeCurrentSlideBullet = (bIdx) => {
+    if (!presentation || !presentation.slides) return;
+    setPresentation((prev) => {
+      const slides = [...prev.slides];
+      const current = slides[activeSlideIdx];
+      const bullets = (current.bullets || []).filter((_, i) => i !== bIdx);
+      slides[activeSlideIdx] = { ...current, bullets };
+      return { ...prev, slides };
+    });
+  };
+
+  const ensureColumns = (slide) => {
+    if (slide && slide.columns && slide.columns.length > 0) return slide.columns;
+    return [
+      { number: '01', title: 'CONCEITO BASE', description: 'Definição inicial e regras básicas.' },
+      { number: '02', title: 'DESENVOLVIMENTO', description: 'Como aplicar na prática e exercícios.' },
+      { number: '03', title: 'APLICAÇÕES', description: 'Exemplos reais e resolução passo a passo.' },
+      { number: '04', title: 'CONCLUSÃO', description: 'Síntese final para fixação do conteúdo.' }
+    ];
+  };
+
+  const updateCurrentSlideColumn = (colIdx, field, value) => {
+    if (!presentation || !presentation.slides) return;
+    setPresentation((prev) => {
+      const slides = [...prev.slides];
+      const current = slides[activeSlideIdx];
+      const baseCols = ensureColumns(current);
+      const columns = baseCols.map((c) => ({ ...c }));
+      if (columns[colIdx]) {
+        columns[colIdx] = { ...columns[colIdx], [field]: value };
+      }
+      slides[activeSlideIdx] = { ...current, columns };
+      return { ...prev, slides };
+    });
+  };
+
   const getEffectiveColors = () => {
     if (!autoColors) {
       return [primaryColor, secondaryColor];
@@ -382,6 +482,17 @@ export default function App() {
         </div>
 
         <div className="edu-header-actions">
+          <a
+            href="https://wa.me/5561985823912?text=Ol%C3%A1!%20Preciso%20de%20ajuda%20com%20meus%20slides%20no%20Slides%20da%20Oninha."
+            target="_blank"
+            rel="noopener noreferrer"
+            className="edu-btn-whatsapp-header"
+            title="Suporte por WhatsApp (61) 98582-3912"
+          >
+            <MessageCircle size={15} />
+            <span className="btn-label-desktop">Suporte WhatsApp</span>
+          </a>
+
           <button
             type="button"
             className="edu-btn-generate"
@@ -436,7 +547,7 @@ export default function App() {
       <div className="edu-main-layout no-print">
         {/* Left Control Panel */}
         <aside className={`edu-control-panel ${mobileView === 'edit' ? 'show-mobile' : 'hide-mobile'}`}>
-          {/* Clean 3 Tabs: 1. Ideia | 2. Páginas | 3. Cores */}
+          {/* 4 Clean Tabs: 1. Ideia | 2. Páginas | 3. Editar Textos | 4. Cores */}
           <div className="edu-nav-tabs">
             <button
               type="button"
@@ -456,11 +567,19 @@ export default function App() {
             </button>
             <button
               type="button"
+              className={activeTab === 'editar' ? 'active' : ''}
+              onClick={() => setActiveTab('editar')}
+            >
+              <Edit3 size={16} />
+              <span>3. Editar Textos (Pág. {activeSlideIdx + 1})</span>
+            </button>
+            <button
+              type="button"
               className={activeTab === 'cores' ? 'active' : ''}
               onClick={() => setActiveTab('cores')}
             >
               <Palette size={16} />
-              <span>3. Cores</span>
+              <span>4. Cores</span>
             </button>
           </div>
 
@@ -475,7 +594,7 @@ export default function App() {
                     className="edu-input-textarea"
                     placeholder="Ex: Teorema de Pitágoras e aplicações práticas na arquitetura..."
                     value={idea}
-                    onChange={(e) => setIdea(e.target.value)}
+                    onChange={(e) => handleIdeaChange(e.target.value)}
                   />
                   <span className="edu-tip">
                     A IA criará títulos didáticos, explicações passo a passo e tópicos claros.
@@ -634,6 +753,19 @@ export default function App() {
                                 }}
                                 hidden
                               />
+
+                              <button
+                                type="button"
+                                className="edu-btn-edit-page-content"
+                                onClick={() => {
+                                  setActiveSlideIdx(idx);
+                                  setActiveTab('editar');
+                                }}
+                                title="Editar títulos, tópicos e cartões desta página"
+                              >
+                                <Edit3 size={12} />
+                                <span>Editar Textos</span>
+                              </button>
                             </div>
                           </div>
 
@@ -663,7 +795,191 @@ export default function App() {
               </div>
             )}
 
-            {/* TAB 3: CORES DO TEMA */}
+            {/* TAB 3: EDITAR TEXTOS DA PÁGINA ATIVA EM TEMPO REAL */}
+            {activeTab === 'editar' && (
+              <div className="edu-tab-content">
+                <div className="edu-card">
+                  <div className="edu-card-header-row">
+                    <div>
+                      <label className="edu-card-title">
+                        Editar Textos da Página {activeSlideIdx + 1}
+                      </label>
+                      <span className="edu-tip" style={{ display: 'block', marginTop: 2 }}>
+                        Altere os campos abaixo para ver o slide atualizar na mesma hora:
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Seletor Rápido de Página */}
+                  <div className="edu-edit-slide-selector">
+                    <button
+                      type="button"
+                      className="edu-num-btn"
+                      disabled={activeSlideIdx === 0}
+                      onClick={() => setActiveSlideIdx((i) => Math.max(0, i - 1))}
+                    >
+                      <ChevronLeft size={14} /> Pág. Anterior
+                    </button>
+                    <span className="edu-edit-slide-badge">
+                      Página <strong>{activeSlideIdx + 1}</strong> de{' '}
+                      <strong>{presentation?.slides?.length || totalPages}</strong>
+                    </span>
+                    <button
+                      type="button"
+                      className="edu-num-btn"
+                      disabled={
+                        !presentation?.slides ||
+                        activeSlideIdx >= presentation.slides.length - 1
+                      }
+                      onClick={() =>
+                        setActiveSlideIdx((i) =>
+                          Math.min((presentation?.slides?.length || 1) - 1, i + 1)
+                        )
+                      }
+                    >
+                      Próxima Pág. <ChevronRight size={14} />
+                    </button>
+                  </div>
+                </div>
+
+                {currentSlide && (
+                  <div className="edu-card edu-edit-fields-container">
+                    {/* Título Principal do Slide */}
+                    <div className="edu-edit-field-group">
+                      <label className="edu-edit-label">Título da Página:</label>
+                      <input
+                        type="text"
+                        className="edu-edit-input"
+                        value={currentSlide.title || ''}
+                        onChange={(e) => updateCurrentSlideField('title', e.target.value)}
+                        placeholder="Ex: TEOREMA DE PITÁGORAS E RELAÇÕES"
+                      />
+                    </div>
+
+                    {/* Subtítulo */}
+                    <div className="edu-edit-field-group">
+                      <label className="edu-edit-label">Subtítulo / Introdução:</label>
+                      <textarea
+                        rows={2}
+                        className="edu-edit-input"
+                        value={currentSlide.subtitle || ''}
+                        onChange={(e) => updateCurrentSlideField('subtitle', e.target.value)}
+                        placeholder="Ex: Compreendendo os conceitos essenciais e a lógica..."
+                      />
+                    </div>
+
+                    {/* Texto Corrido (se aplicável ao layout) */}
+                    {currentSlide.bodyText !== undefined && (
+                      <div className="edu-edit-field-group">
+                        <label className="edu-edit-label">Texto / Explicação do Conteúdo:</label>
+                        <textarea
+                          rows={3}
+                          className="edu-edit-input"
+                          value={currentSlide.bodyText || ''}
+                          onChange={(e) => updateCurrentSlideField('bodyText', e.target.value)}
+                          placeholder="Explicação didática detalhada..."
+                        />
+                      </div>
+                    )}
+
+                    {/* CARTÕES E COLUNAS 01 A 04 (CONCEITO BASE, DESENVOLVIMENTO, APLICAÇÕES, CONCLUSÃO) */}
+                    <div className="edu-edit-field-group">
+                      <label className="edu-edit-label" style={{ color: '#38bdf8' }}>
+                        Cartões e Tópicos 01 - 04 (Grade e Colunas):
+                      </label>
+                      {ensureColumns(currentSlide).map((col, cIdx) => (
+                        <div key={cIdx} className="edu-column-edit-card">
+                          <div className="edu-column-edit-header">
+                            <span className="edu-column-num-badge">0{cIdx + 1}</span>
+                            <input
+                              type="text"
+                              className="edu-edit-input"
+                              style={{ fontWeight: 'bold' }}
+                              value={col.title || ''}
+                              onChange={(e) =>
+                                updateCurrentSlideColumn(cIdx, 'title', e.target.value)
+                              }
+                              placeholder={`Título do Cartão 0${cIdx + 1} (Ex: CONCEITO BASE)`}
+                            />
+                          </div>
+                          <textarea
+                            rows={2}
+                            className="edu-edit-input"
+                            style={{ marginTop: 4 }}
+                            value={col.description || ''}
+                            onChange={(e) =>
+                              updateCurrentSlideColumn(cIdx, 'description', e.target.value)
+                            }
+                            placeholder={`Descrição do Cartão 0${cIdx + 1} (Ex: Definição inicial e regras básicas.)`}
+                          />
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* TÓPICOS EM MARCADORES (BULLETS) */}
+                    <div className="edu-edit-field-group">
+                      <label className="edu-edit-label">Pontos em Tópicos (Lista):</label>
+                      {(currentSlide.bullets || []).map((bullet, bIdx) => (
+                        <div key={bIdx} className="edu-bullet-edit-row">
+                          <span className="edu-bullet-num">▸ {bIdx + 1}</span>
+                          <input
+                            type="text"
+                            className="edu-edit-input"
+                            style={{ flex: 1 }}
+                            value={bullet}
+                            onChange={(e) => updateCurrentSlideBullet(bIdx, e.target.value)}
+                            placeholder={`Ponto ${bIdx + 1}...`}
+                          />
+                          <button
+                            type="button"
+                            className="edu-btn-del-bullet"
+                            onClick={() => removeCurrentSlideBullet(bIdx)}
+                            title="Excluir este ponto"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
+                      ))}
+                      <button
+                        type="button"
+                        className="edu-btn-add-bullet"
+                        onClick={addCurrentSlideBullet}
+                      >
+                        + Adicionar Mais um Ponto
+                      </button>
+                    </div>
+
+                    {/* CITAÇÃO / FRASE (se layout quote-vision) */}
+                    {currentSlide.layoutType === 'quote-vision' && (
+                      <>
+                        <div className="edu-edit-field-group">
+                          <label className="edu-edit-label">Frase de Destaque:</label>
+                          <textarea
+                            rows={3}
+                            className="edu-edit-input"
+                            value={currentSlide.quoteText || ''}
+                            onChange={(e) => updateCurrentSlideField('quoteText', e.target.value)}
+                            placeholder="Frase inspiradora ou citação..."
+                          />
+                        </div>
+                        <div className="edu-edit-field-group">
+                          <label className="edu-edit-label">Autor da Frase:</label>
+                          <input
+                            type="text"
+                            className="edu-edit-input"
+                            value={currentSlide.quoteAuthor || ''}
+                            onChange={(e) => updateCurrentSlideField('quoteAuthor', e.target.value)}
+                            placeholder="Ex: Galileu Galilei"
+                          />
+                        </div>
+                      </>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* TAB 4: CORES DO TEMA */}
             {activeTab === 'cores' && (
               <div className="edu-tab-content">
                 <div className="edu-card">
@@ -771,6 +1087,19 @@ export default function App() {
               >
                 Próxima <ChevronRight size={18} />
               </button>
+
+              <button
+                type="button"
+                className="edu-stage-btn"
+                style={{ marginLeft: 8 }}
+                onClick={() => {
+                  setActiveTab('editar');
+                  if (window.innerWidth < 960) setMobileView('edit');
+                }}
+                title="Editar textos deste slide em tempo real"
+              >
+                <Edit3 size={14} /> <span>Editar Textos</span>
+              </button>
             </div>
 
             <button
@@ -804,7 +1133,8 @@ export default function App() {
                   primaryColor={displayPrimary}
                   secondaryColor={displaySecondary}
                   presentationTitle={presentation?.presentationTitle}
-                  showWatermark={false}
+                  showWatermark={!isPaid}
+                  isSubtle={true}
                 />
               )}
             </div>
@@ -915,6 +1245,9 @@ export default function App() {
         onPaymentSuccess={handlePaymentSuccess}
         primaryColor={displayPrimary}
       />
+
+      {/* Central de Suporte por WhatsApp (61) 9 8582-3912 */}
+      <WhatsAppSupport />
     </div>
   );
 }

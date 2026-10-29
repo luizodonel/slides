@@ -2628,3 +2628,396 @@ body {
   border-color: #64748b;
   color: #fff;
 }
+
+/* =========================================================
+   SUBTLE MODE (TARJA CLARINHA PARA O EDITOR NÃO ATRAPALHAR)
+   ========================================================= */
+.slide-anti-fraud-overlay.is-subtle {
+  pointer-events: none;
+  user-select: none;
+}
+
+.slide-anti-fraud-overlay.is-subtle .saf-watermark-grid {
+  opacity: 0.04;
+}
+
+.slide-anti-fraud-overlay.is-subtle .saf-central-banner {
+  background: rgba(220, 38, 38, 0.22);
+  backdrop-filter: none;
+  border-top: 2px dashed rgba(254, 240, 138, 0.45);
+  border-bottom: 2px dashed rgba(254, 240, 138, 0.45);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+  padding: 0.8vw 2vw;
+}
+
+.slide-anti-fraud-overlay.is-subtle .saf-banner-badge {
+  background: rgba(253, 224, 71, 0.65);
+  color: #7f1d1d;
+  font-size: 0.7vw;
+  font-weight: 800;
+  padding: 0.15vw 0.6vw;
+}
+
+.slide-anti-fraud-overlay.is-subtle .saf-banner-title {
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 2.6vw;
+  text-shadow: 1px 1px 3px rgba(185, 28, 28, 0.6);
+}
+
+.slide-anti-fraud-overlay.is-subtle .saf-banner-sub {
+  color: rgba(254, 240, 138, 0.8);
+  font-size: 0.85vw;
+}
+
+.slide-anti-fraud-overlay.is-subtle .saf-banner-legal {
+  color: rgba(254, 226, 226, 0.7);
+  font-size: 0.65vw;
+}
+
+/* =========================================================
+   EDIÇÃO DE TEXTO DO SLIDE EM TEMPO REAL
+   ========================================================= */
+.edu-edit-fields-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.edu-edit-field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.edu-edit-label {
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.edu-edit-input {
+  background: #1e293b;
+  border: 1px solid #475569;
+  border-radius: 6px;
+  color: #fff;
+  padding: 8px 10px;
+  font-size: 0.8rem;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.edu-edit-input:focus {
+  border-color: #38bdf8;
+  background: #0f172a;
+}
+
+.edu-bullet-edit-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
+.edu-bullet-num {
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: #38bdf8;
+  min-width: 20px;
+}
+
+.edu-btn-del-bullet {
+  background: transparent;
+  border: none;
+  color: #f87171;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+}
+
+.edu-btn-del-bullet:hover {
+  background: rgba(239, 68, 68, 0.2);
+}
+
+.edu-btn-add-bullet {
+  background: rgba(56, 189, 248, 0.1);
+  border: 1px dashed #38bdf8;
+  color: #38bdf8;
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  width: 100%;
+  margin-top: 4px;
+  transition: all 0.15s;
+}
+
+.edu-btn-add-bullet:hover {
+  background: rgba(56, 189, 248, 0.2);
+  color: #fff;
+}
+
+/* =========================================================
+   CENTRAL DE SUPORTE POR WHATSAPP
+   ========================================================= */
+.edu-whatsapp-fab-container {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.edu-whatsapp-fab {
+  background: #25D366;
+  color: #ffffff;
+  border: none;
+  border-radius: 50px;
+  padding: 10px 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  box-shadow: 0 4px 20px rgba(37, 211, 102, 0.45);
+  transition: all 0.2s ease-in-out;
+  animation: pulseFab 2.5s infinite;
+}
+
+@keyframes pulseFab {
+  0% { transform: scale(1); box-shadow: 0 4px 20px rgba(37, 211, 102, 0.4); }
+  50% { transform: scale(1.04); box-shadow: 0 6px 26px rgba(37, 211, 102, 0.65); }
+  100% { transform: scale(1); box-shadow: 0 4px 20px rgba(37, 211, 102, 0.4); }
+}
+
+.edu-whatsapp-fab:hover {
+  background: #20bd5a;
+  transform: scale(1.06);
+}
+
+.edu-whatsapp-icon {
+  flex-shrink: 0;
+}
+
+.edu-whatsapp-label {
+  font-weight: 800;
+  font-size: 0.84rem;
+  letter-spacing: 0.02em;
+}
+
+.edu-whatsapp-card {
+  position: absolute;
+  bottom: 60px;
+  right: 0;
+  width: 320px;
+  background: #0f172a;
+  border: 1px solid #334155;
+  border-radius: 14px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.7);
+  overflow: hidden;
+  animation: slideUp 0.18s ease-out;
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.edu-whatsapp-card-header {
+  background: #128C7E;
+  color: #fff;
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.edu-whatsapp-header-content {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.edu-whatsapp-avatar-badge {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.edu-whatsapp-card-title {
+  font-size: 0.95rem;
+  font-weight: 800;
+  line-height: 1.1;
+  color: #fff;
+}
+
+.edu-whatsapp-card-sub {
+  font-size: 0.72rem;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.edu-whatsapp-close {
+  background: transparent;
+  border: none;
+  color: #fff;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+}
+
+.edu-whatsapp-card-body {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.edu-whatsapp-desc {
+  font-size: 0.78rem;
+  color: #cbd5e1;
+  line-height: 1.45;
+}
+
+.edu-whatsapp-number-box {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 8px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.edu-whatsapp-phone-label {
+  font-size: 0.7rem;
+  color: #94a3b8;
+}
+
+.edu-whatsapp-phone-value {
+  font-size: 1.05rem;
+  color: #25D366;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+}
+
+.edu-btn-open-whatsapp {
+  background: #25D366;
+  color: #ffffff;
+  text-decoration: none;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-weight: 800;
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: background 0.15s;
+}
+
+.edu-btn-open-whatsapp:hover {
+  background: #20bd5a;
+}
+
+@media (max-width: 600px) {
+  .edu-whatsapp-fab-container {
+    bottom: 74px;
+    right: 12px;
+  }
+  .edu-whatsapp-label {
+    display: none;
+  }
+  .edu-whatsapp-fab {
+    padding: 10px;
+    border-radius: 50%;
+  }
+}
+
+.edu-btn-whatsapp-header {
+  background: rgba(37, 211, 102, 0.15);
+  border: 1px solid #25D366;
+  color: #25D366;
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  text-decoration: none;
+  transition: all 0.15s;
+}
+
+.edu-btn-whatsapp-header:hover {
+  background: #25D366;
+  color: #ffffff;
+}
+
+.edu-btn-edit-page-content {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(56, 189, 248, 0.12);
+  border: 1px solid #0284c7;
+  color: #38bdf8;
+  border-radius: 5px;
+  padding: 3px 8px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.edu-btn-edit-page-content:hover {
+  background: rgba(56, 189, 248, 0.25);
+  color: #ffffff;
+}
+
+.edu-column-edit-card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 8px;
+  padding: 8px 10px;
+  margin-bottom: 8px;
+}
+
+.edu-column-edit-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.edu-column-num-badge {
+  background: #0284c7;
+  color: #ffffff;
+  font-size: 0.72rem;
+  font-weight: 800;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.edu-edit-slide-selector {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 10px;
+  background: #1e293b;
+  border-radius: 8px;
+  padding: 6px 10px;
+}
+
+.edu-edit-slide-badge {
+  font-size: 0.8rem;
+  color: #cbd5e1;
+}

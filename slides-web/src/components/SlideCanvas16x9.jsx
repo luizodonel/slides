@@ -7,7 +7,8 @@ export default function SlideCanvas16x9({
   primaryColor = '#F97316',
   secondaryColor = '#1E293B',
   presentationTitle = 'APRESENTAÇÃO',
-  showWatermark = false
+  showWatermark = false,
+  isSubtle = false
 }) {
   if (!slide) return null;
 
@@ -438,9 +439,9 @@ export default function SlideCanvas16x9({
         </span>
       </div>
 
-      {/* OVERLAY RASCUNHO (MOSTRADO SOMENTE NA PRÉ-VISUALIZAÇÃO DO PDF) */}
+      {/* OVERLAY RASCUNHO (MOSTRADO NA TELA CLARINHO OU NO MODAL PDF) */}
       {showWatermark && (
-        <div className="slide-anti-fraud-overlay">
+        <div className={`slide-anti-fraud-overlay ${isSubtle ? 'is-subtle' : ''}`}>
           <div className="saf-watermark-grid">
             {Array.from({ length: 6 }).map((_, i) => (
               <span key={i} className="saf-repeat-text">
