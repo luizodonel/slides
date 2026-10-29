@@ -601,30 +601,20 @@ export default function App() {
                   </span>
                 </div>
 
-                <div className="edu-card">
-                  <label className="edu-card-title">Escolha a Matéria:</label>
-                  <div className="edu-subject-chips">
-                    {SUBJECT_THEMES.map((sub) => {
-                      const isSel = subjectTheme === sub.id;
-                      return (
-                        <button
-                          key={sub.id}
-                          type="button"
-                          className={`edu-chip ${isSel ? 'selected' : ''}`}
-                          onClick={() => {
-                            setSubjectTheme(sub.id);
-                            if (autoColors) {
-                              setPrimaryColor(sub.defaultColors[0]);
-                              setSecondaryColor(sub.defaultColors[1]);
-                            }
-                          }}
-                        >
-                          <span className="edu-chip-icon">{sub.icon}</span>
-                          <span className="edu-chip-name">{sub.name}</span>
-                        </button>
-                      );
-                    })}
-                  </div>
+                <div className="edu-card edu-custom-slide-card">
+                  <label className="edu-card-title">Deseja um slide personalizado?</label>
+                  <p className="edu-tip" style={{ marginBottom: 10 }}>
+                    Montamos uma apresentação exclusiva para o seu trabalho ou aula. Fale com a gente!
+                  </p>
+                  <a
+                    href="https://wa.me/5561985823912?text=Ol%C3%A1!%20Gostaria%20de%20um%20slide%20personalizado%20no%20Slides%20da%20Oninha."
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="edu-btn-open-whatsapp"
+                  >
+                    <MessageCircle size={16} />
+                    <span>Chamar no WhatsApp</span>
+                  </a>
                 </div>
 
                 <button
@@ -930,23 +920,8 @@ export default function App() {
                             onChange={(e) => updateCurrentSlideBullet(bIdx, e.target.value)}
                             placeholder={`Ponto ${bIdx + 1}...`}
                           />
-                          <button
-                            type="button"
-                            className="edu-btn-del-bullet"
-                            onClick={() => removeCurrentSlideBullet(bIdx)}
-                            title="Excluir este ponto"
-                          >
-                            <Trash2 size={14} />
-                          </button>
                         </div>
                       ))}
-                      <button
-                        type="button"
-                        className="edu-btn-add-bullet"
-                        onClick={addCurrentSlideBullet}
-                      >
-                        + Adicionar Mais um Ponto
-                      </button>
                     </div>
 
                     {/* CITAÇÃO / FRASE (se layout quote-vision) */}
@@ -1138,35 +1113,6 @@ export default function App() {
                 />
               )}
             </div>
-          </div>
-
-          {/* Filmstrip */}
-          <div className="edu-filmstrip">
-            {(presentation?.slides || []).map((slide, idx) => {
-              const hasPhoto = Boolean(slide.photoBase64);
-              return (
-                <div
-                  key={idx}
-                  className={`edu-thumb ${activeSlideIdx === idx ? 'active' : ''}`}
-                  onClick={() => setActiveSlideIdx(idx)}
-                  style={{
-                    borderColor: activeSlideIdx === idx ? displayPrimary : 'transparent'
-                  }}
-                >
-                  <div className="edu-thumb-header">
-                    <span>Pág. {idx + 1}</span>
-                    {hasPhoto && <span>📸</span>}
-                  </div>
-                  <div className="edu-thumb-svg">
-                    <LayoutMiniPreview
-                      layoutId={slide.layoutType}
-                      primary={displayPrimary}
-                      secondary={displaySecondary}
-                    />
-                  </div>
-                </div>
-              );
-            })}
           </div>
 
           {/* Mobile Bottom Bar */}
