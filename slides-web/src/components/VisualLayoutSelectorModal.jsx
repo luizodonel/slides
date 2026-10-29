@@ -90,7 +90,6 @@ export default function VisualLayoutSelectorModal({
                       <strong className="edu-layout-card-title">{layout.name}</strong>
                       <span className="edu-layout-cat-pill">{layout.category}</span>
                     </div>
-                    <p className="edu-layout-card-desc">{layout.description}</p>
                   </div>
                 </div>
               );
@@ -101,3 +100,4 @@ export default function VisualLayoutSelectorModal({
     </div>
   );
 }
+

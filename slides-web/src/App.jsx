@@ -994,7 +994,7 @@ export default function App() {
                               <span className="edu-layout-name-display">
                                 {PAGE_LAYOUTS.find((l) => l.id === cfg.layoutType)?.name || cfg.layoutType}
                               </span>
-                              <span className="edu-layout-picker-pill">Ver Modelos ▾</span>
+                              <span className="edu-layout-picker-pill">Modelos ▾</span>
                             </button>
 
                             {/* Direct Photo Upload Control on this page */}
@@ -1006,7 +1006,7 @@ export default function App() {
                                     alt="Foto"
                                     className="edu-mini-attached-thumb"
                                   />
-                                  <span className="edu-attached-name">Foto adicionada</span>
+                                  <span className="edu-attached-name">Foto OK</span>
                                   <button
                                     type="button"
                                     className="edu-action-link"
@@ -1043,8 +1043,8 @@ export default function App() {
                                     if (inputEl) inputEl.click();
                                   }}
                                 >
-                                  <Camera size={13} />
-                                  <span>+ Foto nesta pág</span>
+                                  <Camera size={12} />
+                                  <span>+ Foto</span>
                                 </button>
                               )}
 
