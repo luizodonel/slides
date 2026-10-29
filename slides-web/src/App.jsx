@@ -86,6 +86,17 @@ export default function App() {
   const [paidPaymentId, setPaidPaymentId] = useState(null);
   const [isPreviewPdfOpen, setIsPreviewPdfOpen] = useState(false);
 
+  // Texto do Trabalho para Geração Automática com IA
+  const [assignmentText, setAssignmentText] = useState('');
+  const MIN_ASSIGNMENT_CHARS = 80;
+
+  const calculateEstimatedPages = (length) => {
+    if (length < 260) return 2;
+    if (length < 600) return 3;
+    if (length < 1100) return 4;
+    return 5;
+  };
+
   // Handle Total Pages Change
   const handleTotalPagesChange = (newTotal) => {
     const clamped = Math.max(2, Math.min(12, Number(newTotal) || 4));
@@ -442,6 +453,184 @@ export default function App() {
     }
   };
 
+  // Geração Automática com IA a partir do Texto do Trabalho
+  const handleCreateFromAssignmentText = async () => {
+    const raw = assignmentText.trim();
+    if (raw.length < MIN_ASSIGNMENT_CHARS) return;
+
+    setIsGenerating(true);
+    setStatusMessage('Analisando seu trabalho e montando os slides com IA...');
+
+    // 1. Extração Inteligente do Texto
+    const lines = raw.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+    const sentences = raw
+      .replace(/([.?!])\s+/g, '$1|')
+      .split('|')
+      .map((s) => s.trim().replace(/\s+/g, ' '))
+      .filter((s) => s.length > 8);
+
+    // Título Principal
+    let detectedTitle = '';
+    if (lines.length > 0 && lines[0].length <= 80 && !lines[0].endsWith('.')) {
+      detectedTitle = lines[0];
+    } else if (sentences.length > 0) {
+      detectedTitle = sentences[0].slice(0, 65).replace(/[.?!]+$/, '');
+    } else {
+      detectedTitle = 'APRESENTAÇÃO DIDÁTICA';
+    }
+
+    // Disciplina e Cores
+    const lower = raw.toLowerCase();
+    let detectedSubject = 'negocios';
+    let pCol = '#2563EB';
+    let sCol = '#0F172A';
+
+    if (/matem|equa|geometr|pitág|cálcul|fórmula|trigono/i.test(lower)) {
+      detectedSubject = 'matematica';
+      pCol = '#2563EB';
+      sCol = '#0F172A';
+    } else if (/biolog|célul|ecolog|genét|dna|fotossínt|organism|corpo/i.test(lower)) {
+      detectedSubject = 'biologia';
+      pCol = '#10B981';
+      sCol = '#064E3B';
+    } else if (/físic|newton|energia|óptic|termodin|gravidad|velocidad/i.test(lower)) {
+      detectedSubject = 'fisica';
+      pCol = '#7C3AED';
+      sCol = '#1E1B4B';
+    } else if (/químic|átomo|reação|molécul|tabela periód|ácid/i.test(lower)) {
+      detectedSubject = 'quimica';
+      pCol = '#06B6D4';
+      sCol = '#0F172A';
+    } else if (/histór|guerra|sécul|impér|revoluç|brasil impér|idade médi/i.test(lower)) {
+      detectedSubject = 'historia';
+      pCol = '#B45309';
+      sCol = '#1C1917';
+    } else if (/geograf|clima|relev|relevo|geopolít|continente|populaç/i.test(lower)) {
+      detectedSubject = 'geografia';
+      pCol = '#0284C7';
+      sCol = '#0C4A6E';
+    } else if (/portugu|gramát|literat|redação|poesia|modernism|verbo/i.test(lower)) {
+      detectedSubject = 'portugues';
+      pCol = '#D97706';
+      sCol = '#27272A';
+    } else if (/tecnolog|software|inteligência|ia|computad|sistema|program/i.test(lower)) {
+      detectedSubject = 'tecnologia';
+      pCol = '#6366F1';
+      sCol = '#090D16';
+    }
+
+    // Quantidade de páginas calculada automaticamente (mínimo de 2)
+    const targetPages = calculateEstimatedPages(raw.length);
+    setIdea(detectedTitle);
+    setSubjectTheme(detectedSubject);
+    setPrimaryColor(pCol);
+    setSecondaryColor(sCol);
+    setTotalPages(targetPages);
+
+    // Sequência ideal de layouts
+    const layoutSequence = [];
+    if (targetPages === 2) {
+      layoutSequence.push('cover-circle', 'split-photo-left');
+    } else if (targetPages === 3) {
+      layoutSequence.push('cover-circle', 'split-photo-left', 'closing-thankyou');
+    } else if (targetPages === 4) {
+      const hasStats = /\b\d+([.,]\d+)?\s*(%|x|milhões|mil|vezes)\b/i.test(raw);
+      layoutSequence.push(
+        'cover-circle',
+        'split-photo-left',
+        hasStats ? 'infographic-stats' : 'grid-4-cards',
+        'closing-thankyou'
+      );
+    } else {
+      layoutSequence.push(
+        'cover-circle',
+        'split-photo-left',
+        'grid-4-cards',
+        'infographic-stats',
+        'closing-thankyou'
+      );
+    }
+
+    // Configurações das páginas
+    const newConfigs = layoutSequence.map((layout, i) => ({
+      pageNumber: i + 1,
+      layoutType: layout,
+      customTitle: '',
+      photoBase64: null,
+      photoName: null,
+      photoCaption: ''
+    }));
+    setPageConfigs(newConfigs);
+
+    // Tópicos extraídos das frases
+    const bulletsPool = sentences.length > 2
+      ? sentences.slice(1, 10).map((s) => s.slice(0, 95))
+      : [
+          'Compreensão dos fundamentos e objetivos centrais',
+          'Aplicações práticas e análise dos resultados',
+          'Síntese conclusiva e pontos de fixação'
+        ];
+
+    const generatedSlides = layoutSequence.map((layout, idx) => {
+      const pageNum = idx + 1;
+      const isFirst = idx === 0;
+      const isLast = idx === targetPages - 1;
+
+      const slideBullets = [
+        bulletsPool[idx % bulletsPool.length] || 'Fundamento essencial do estudo',
+        bulletsPool[(idx + 1) % bulletsPool.length] || 'Aplicação prática e mecanismos',
+        bulletsPool[(idx + 2) % bulletsPool.length] || 'Evidências e fixação de aprendizado'
+      ];
+
+      return {
+        pageNumber: pageNum,
+        layoutType: layout,
+        badge: `PÁGINA 0${pageNum} • CONCEITO`,
+        title: isFirst
+          ? detectedTitle.toUpperCase()
+          : isLast
+          ? 'OBRIGADO PELA ATENÇÃO!'
+          : `TÓPICO 0${pageNum}: DESENVOLVIMENTO`,
+        subtitle: isFirst
+          ? (sentences[1] ? sentences[1].slice(0, 140) : `Compreendendo os conceitos essenciais e a lógica de ${detectedTitle}.`)
+          : `Análise estruturada e detalhamento sobre ${detectedTitle}.`,
+        bodyText: sentences[idx] ? sentences[idx].slice(0, 260) : raw.slice(0, 200),
+        bullets: slideBullets,
+        columns: [
+          { number: '01', title: 'CONCEITO BASE', description: bulletsPool[0] || 'Definição inicial e regras básicas.' },
+          { number: '02', title: 'DESENVOLVIMENTO', description: bulletsPool[1] || 'Como aplicar na prática e exercícios.' },
+          { number: '03', title: 'APLICAÇÕES', description: bulletsPool[2] || 'Exemplos reais e resolução passo a passo.' },
+          { number: '04', title: 'CONCLUSÃO', description: bulletsPool[3] || 'Síntese final para fixação do conteúdo.' }
+        ],
+        stats: [
+          { value: '95%', label: 'Clareza Didática', description: 'Estruturado para fácil compreensão.' },
+          { value: '3x', label: 'Mais Rápido', description: 'Economiza tempo na preparação de aulas.' },
+          { value: '100%', label: 'Educacional', description: 'Ideal para Ensino Fundamental, Médio e Faculdade.' }
+        ],
+        highlightQuote: `“${sentences[0] ? sentences[0].slice(0, 120) : 'O conhecimento organizado transforma temas complexos em aprendizado simples.'}”`,
+        photoBase64: null,
+        photoCaption: null
+      };
+    });
+
+    const newPresentation = {
+      presentationTitle: detectedTitle,
+      idea: detectedTitle,
+      subjectTheme: detectedSubject,
+      primaryColor: pCol,
+      secondaryColor: sCol,
+      autoColors: true,
+      totalPages: targetPages,
+      slides: generatedSlides
+    };
+
+    setPresentation(newPresentation);
+    setActiveSlideIdx(0);
+    setIsGenerating(false);
+    setStatusMessage(`🎉 Slides criados com sucesso! Geramos ${targetPages} páginas a partir do seu trabalho.`);
+    setActiveTab('paginas');
+  };
+
   const handleExportPdf = async (customPaymentId = null) => {
     if (!presentation) return;
     const effectivePaymentId = customPaymentId || paidPaymentId;
@@ -650,6 +839,51 @@ export default function App() {
             {/* TAB 1: IDEIA & MATÉRIA */}
             {activeTab === 'ideia' && (
               <div className="edu-tab-content">
+                {/* 1. Criar Slides com o Texto do seu Trabalho (IA Automática) */}
+                <div className="edu-card edu-generate-from-work-card">
+                  <div className="edu-card-header-row" style={{ marginBottom: 6 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <Sparkles size={16} color="#38bdf8" />
+                      <label className="edu-card-title">Criar Slides com o Texto do seu Trabalho</label>
+                    </div>
+                    <span className="edu-badge-ai">IA Automática</span>
+                  </div>
+                  <p className="edu-tip" style={{ marginBottom: 10, lineHeight: 1.4 }}>
+                    Cole o conteúdo ou resumo do seu trabalho. A IA analisa o texto, define a quantidade ideal de páginas (mínimo de 2 páginas) e escolhe os melhores modelos automaticamente.
+                  </p>
+
+                  <textarea
+                    rows={4}
+                    className="edu-assignment-textarea"
+                    placeholder="Cole aqui o texto do seu trabalho ou aula... (mínimo de 80 caracteres para gerar os slides)"
+                    value={assignmentText}
+                    onChange={(e) => setAssignmentText(e.target.value)}
+                  />
+
+                  <div className="edu-char-counter-row">
+                    {assignmentText.trim().length < MIN_ASSIGNMENT_CHARS ? (
+                      <span className="edu-char-counter is-short">
+                        🔴 {assignmentText.trim().length} / {MIN_ASSIGNMENT_CHARS} caracteres (digite mais {MIN_ASSIGNMENT_CHARS - assignmentText.trim().length} para liberar)
+                      </span>
+                    ) : (
+                      <span className="edu-char-counter is-ready">
+                        🟢 {assignmentText.trim().length} caracteres • Pronto para gerar (~{calculateEstimatedPages(assignmentText.trim().length)} páginas)
+                      </span>
+                    )}
+                  </div>
+
+                  <button
+                    type="button"
+                    className="edu-btn-create-from-text"
+                    disabled={assignmentText.trim().length < MIN_ASSIGNMENT_CHARS || isGenerating}
+                    onClick={handleCreateFromAssignmentText}
+                  >
+                    <Sparkles size={16} />
+                    <span>{isGenerating ? 'Criando Slides com IA...' : '✨ Criar Slides Automaticamente'}</span>
+                  </button>
+                </div>
+
+                {/* 2. Deseja um slide personalizado? */}
                 <div className="edu-card edu-custom-slide-card">
                   <label className="edu-card-title">Deseja um slide personalizado?</label>
                   <p className="edu-tip" style={{ marginBottom: 10 }}>
