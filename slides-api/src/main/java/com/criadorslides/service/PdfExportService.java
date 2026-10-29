@@ -133,15 +133,15 @@ public class PdfExportService {
 
         // Texto principal
         g2.setColor(new Color(185, 28, 28, 210));
-        g2.setFont(new Font("SansSerif", Font.BOLD, 105));
-        String text1 = "RASCUNHO • NÃO PAGO";
+        g2.setFont(new Font("SansSerif", Font.BOLD, 120));
+        String text1 = "RASCUNHO";
         FontMetrics fm1 = g2.getFontMetrics();
         int textX1 = (WIDTH - fm1.stringWidth(text1)) / 2;
         g2.drawString(text1, textX1, HEIGHT / 2 - 10);
 
         // Subtexto
-        g2.setFont(new Font("SansSerif", Font.BOLD, 38));
-        String text2 = "SLIDES DA ONINHA — LIBERAÇÃO APÓS PAGAMENTO PIX";
+        g2.setFont(new Font("SansSerif", Font.BOLD, 40));
+        String text2 = "SLIDES DA ONINHA — PRÉ-VISUALIZAÇÃO";
         FontMetrics fm2 = g2.getFontMetrics();
         int textX2 = (WIDTH - fm2.stringWidth(text2)) / 2;
         g2.drawString(text2, textX2, HEIGHT / 2 + 65);

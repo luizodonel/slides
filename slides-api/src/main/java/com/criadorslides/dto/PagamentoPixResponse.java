@@ -79,3 +79,4 @@ public class PagamentoPixResponse {
         isApproved = approved;
     }
 }
+

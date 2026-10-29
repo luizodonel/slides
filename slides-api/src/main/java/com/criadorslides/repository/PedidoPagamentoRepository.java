@@ -10,3 +10,4 @@ import java.util.Optional;
 public interface PedidoPagamentoRepository extends JpaRepository<PedidoPagamento, String> {
     Optional<PedidoPagamento> findByMercadoPagoId(String mercadoPagoId);
 }
+

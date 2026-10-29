@@ -41,3 +41,4 @@ public class PagamentoPixRequest {
         this.payerCpf = payerCpf;
     }
 }
+

@@ -28,6 +28,8 @@ import {
 import LayoutMiniPreview from './components/LayoutMiniPreview';
 import SlideCanvas16x9 from './components/SlideCanvas16x9';
 import PaymentModal from './components/PaymentModal';
+import PdfPreviewModal from './components/PdfPreviewModal';
+import { FileText } from 'lucide-react';
 
 const DEFAULT_LAYOUT_ORDER = [
   'cover-circle',
@@ -79,6 +81,7 @@ export default function App() {
   const [isPaid, setIsPaid] = useState(false);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [paidPaymentId, setPaidPaymentId] = useState(null);
+  const [isPreviewPdfOpen, setIsPreviewPdfOpen] = useState(false);
 
   // Handle Total Pages Change
   const handleTotalPagesChange = (newTotal) => {
@@ -387,6 +390,17 @@ export default function App() {
           >
             <Wand2 size={16} />
             <span className="btn-label-desktop">{isGenerating ? 'Criando...' : 'Gerar com IA'}</span>
+          </button>
+
+          <button
+            type="button"
+            className="edu-btn-preview-pdf"
+            onClick={() => setIsPreviewPdfOpen(true)}
+            disabled={!presentation}
+            title="Visualizar como vai ficar o documento PDF"
+          >
+            <FileText size={16} />
+            <span className="btn-label-desktop">Visualizar PDF</span>
           </button>
 
           {!isPaid ? (
@@ -790,7 +804,7 @@ export default function App() {
                   primaryColor={displayPrimary}
                   secondaryColor={displaySecondary}
                   presentationTitle={presentation?.presentationTitle}
-                  isPaid={isPaid}
+                  showWatermark={false}
                 />
               )}
             </div>
@@ -827,26 +841,36 @@ export default function App() {
 
           {/* Mobile Bottom Bar */}
           <div className="edu-mobile-bottom-bar">
+            <button
+              type="button"
+              className="edu-btn-preview-pdf"
+              style={{ flex: 1, justifyContent: 'center' }}
+              onClick={() => setIsPreviewPdfOpen(true)}
+            >
+              <FileText size={18} />
+              <span>Ver PDF</span>
+            </button>
+
             {!isPaid ? (
               <button
                 type="button"
                 className="edu-btn-download-mobile"
-                style={{ backgroundColor: '#10b981' }}
+                style={{ backgroundColor: '#10b981', flex: 2 }}
                 onClick={() => setIsPaymentModalOpen(true)}
               >
                 <CreditCard size={18} />
-                <span>Liberar Slides (R$ {(totalPages * 1.5).toFixed(2).replace('.', ',')})</span>
+                <span>Liberar (R$ {(totalPages * 1.5).toFixed(2).replace('.', ',')})</span>
               </button>
             ) : (
               <button
                 type="button"
                 className="edu-btn-download-mobile"
-                style={{ backgroundColor: displayPrimary }}
+                style={{ backgroundColor: displayPrimary, flex: 2 }}
                 onClick={() => handleExportPdf()}
                 disabled={isExportingPdf || !presentation}
               >
                 <FileDown size={18} />
-                <span>{isExportingPdf ? 'Baixando PDF...' : 'Baixar PDF Oficial'}</span>
+                <span>{isExportingPdf ? 'Baixando...' : 'Baixar PDF'}</span>
               </button>
             )}
           </div>
@@ -864,11 +888,24 @@ export default function App() {
               primaryColor={displayPrimary}
               secondaryColor={displaySecondary}
               presentationTitle={presentation?.presentationTitle}
-              isPaid={isPaid}
+              showWatermark={false}
             />
           </div>
         ))}
       </div>
+
+      {/* PDF Preview Modal with Watermark */}
+      <PdfPreviewModal
+        isOpen={isPreviewPdfOpen}
+        onClose={() => setIsPreviewPdfOpen(false)}
+        presentation={presentation}
+        totalPages={totalPages}
+        primaryColor={displayPrimary}
+        secondaryColor={displaySecondary}
+        isPaid={isPaid}
+        onOpenPayment={() => setIsPaymentModalOpen(true)}
+        onDownloadOfficial={() => handleExportPdf()}
+      />
 
       {/* Mercado Pago Payment Modal */}
       <PaymentModal

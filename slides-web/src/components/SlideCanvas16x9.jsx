@@ -7,7 +7,7 @@ export default function SlideCanvas16x9({
   primaryColor = '#F97316',
   secondaryColor = '#1E293B',
   presentationTitle = 'APRESENTAÇÃO',
-  isPaid = false
+  showWatermark = false
 }) {
   if (!slide) return null;
 
@@ -438,25 +438,25 @@ export default function SlideCanvas16x9({
         </span>
       </div>
 
-      {/* OVERLAY ANTI-FRAUDE / RASCUNHO NÃO PAGO */}
-      {!isPaid && (
+      {/* OVERLAY RASCUNHO (MOSTRADO SOMENTE NA PRÉ-VISUALIZAÇÃO DO PDF) */}
+      {showWatermark && (
         <div className="slide-anti-fraud-overlay">
           <div className="saf-watermark-grid">
             {Array.from({ length: 6 }).map((_, i) => (
               <span key={i} className="saf-repeat-text">
-                RASCUNHO • SLIDES DA ONINHA • R$ 1,50/PÁGINA • NÃO PAGO
+                RASCUNHO • SLIDES DA ONINHA • PRÉ-VISUALIZAÇÃO
               </span>
             ))}
           </div>
 
           <div className="saf-central-banner">
-            <div className="saf-banner-badge">🔒 APRESENTAÇÃO BLOQUEADA</div>
-            <div className="saf-banner-title">RASCUNHO • NÃO PAGO</div>
+            <div className="saf-banner-badge">PRÉVIA DO DOCUMENTO</div>
+            <div className="saf-banner-title">RASCUNHO</div>
             <div className="saf-banner-sub">
-              SLIDES DA ONINHA — LIBERAÇÃO COMPLETA APÓS PAGAMENTO PIX
+              SLIDES DA ONINHA — PRÉ-VISUALIZAÇÃO DO PDF
             </div>
             <div className="saf-banner-legal">
-              R$ 1,50 POR SLIDE • PAGUE PARA BAIXAR O PDF OFICIAL LIMPO EM 16:9
+              BAIXE O ARQUIVO OFICIAL EM ALTA DEFINIÇÃO APÓS A LIBERAÇÃO
             </div>
           </div>
         </div>
