@@ -214,37 +214,37 @@ public class PdfExportService {
 
     // 2. COVER DIAGONAL (Inspired by Image 3 top-left diagonal split + diamond/chevron)
     private void renderCoverDiagonal(Graphics2D g, SlidePageDto slide, Color primary, Color secondary, BufferedImage photo) {
-        // Right side photo or dark geometric area
-        Polygon rightPoly = new Polygon(new int[]{880, WIDTH, WIDTH, 1260}, new int[]{0, 0, HEIGHT, HEIGHT}, 4);
+        // Right side photo or dark geometric area (shifted right so stripes never cover the text)
+        Polygon rightPoly = new Polygon(new int[]{980, WIDTH, WIDTH, 1360}, new int[]{0, 0, HEIGHT, HEIGHT}, 4);
         Shape oldClip = g.getClip();
         g.setClip(rightPoly);
-        drawPhotoOrPlaceholder(g, photo, 880, 0, WIDTH - 880, HEIGHT, primary, secondary, slide.getPhotoCaption());
+        drawPhotoOrPlaceholder(g, photo, 980, 0, WIDTH - 980, HEIGHT, primary, secondary, slide.getPhotoCaption());
         // Dark overlay for contrast
         g.setColor(new Color(secondary.getRed(), secondary.getGreen(), secondary.getBlue(), 95));
-        g.fillRect(880, 0, WIDTH - 880, HEIGHT);
+        g.fillRect(980, 0, WIDTH - 980, HEIGHT);
         g.setClip(oldClip);
 
         // Diagonal thick primary stripe
-        Polygon stripe1 = new Polygon(new int[]{820, 910, 1310, 1220}, new int[]{0, 0, HEIGHT, HEIGHT}, 4);
+        Polygon stripe1 = new Polygon(new int[]{920, 1010, 1410, 1320}, new int[]{0, 0, HEIGHT, HEIGHT}, 4);
         g.setColor(primary);
         g.fillPolygon(stripe1);
 
         // Diagonal secondary stripe
-        Polygon stripe2 = new Polygon(new int[]{770, 820, 1220, 1170}, new int[]{0, 0, HEIGHT, HEIGHT}, 4);
+        Polygon stripe2 = new Polygon(new int[]{870, 920, 1320, 1270}, new int[]{0, 0, HEIGHT, HEIGHT}, 4);
         g.setColor(secondary);
         g.fillPolygon(stripe2);
 
-        // Left side content
+        // Left side content (x = 100 .. 820, always left of the stripes)
         g.setColor(secondary);
-        g.setFont(new Font("SansSerif", Font.BOLD, 64));
-        int y = drawWrappedText(g, safe(slide.getTitle(), "TÍTULO DO SLIDE"), 100, 265, 760, 76, 4);
+        g.setFont(new Font("SansSerif", Font.BOLD, 60));
+        int y = drawWrappedText(g, safe(slide.getTitle(), "TÍTULO DO SLIDE"), 100, 265, 720, 72, 4);
 
         g.setColor(primary);
         g.fillRect(100, y + 15, 180, 10);
 
         g.setColor(new Color(71, 85, 105));
         g.setFont(new Font("SansSerif", Font.PLAIN, 28));
-        y = drawWrappedText(g, safe(slide.getSubtitle(), ""), 100, y + 70, 740, 40, 3);
+        y = drawWrappedText(g, safe(slide.getSubtitle(), ""), 100, y + 70, 700, 40, 3);
 
         // Bullets
         List<String> bullets = slide.getBullets();
@@ -255,7 +255,7 @@ public class PdfExportService {
                 g.fillOval(100, by - 22, 24, 24);
                 g.setColor(secondary);
                 g.setFont(new Font("SansSerif", Font.BOLD, 23));
-                g.drawString(truncate(bullets.get(i), 55), 140, by - 2);
+                g.drawString(truncate(bullets.get(i), 50), 140, by - 2);
                 by += 52;
             }
         }
