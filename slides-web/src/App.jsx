@@ -33,7 +33,6 @@ import LayoutMiniPreview from './components/LayoutMiniPreview';
 import SlideCanvas16x9 from './components/SlideCanvas16x9';
 import PaymentModal from './components/PaymentModal';
 import PdfPreviewModal from './components/PdfPreviewModal';
-import WhatsAppSupport from './components/WhatsAppSupport';
 
 const DEFAULT_LAYOUT_ORDER = [
   'cover-circle',
@@ -116,6 +115,56 @@ export default function App() {
       }
       return next;
     });
+
+    // Sincroniza os slides da apresentação ativa em tempo real
+    if (presentation && presentation.slides) {
+      setPresentation((prev) => {
+        let slides = [...(prev.slides || [])];
+        if (slides.length > clamped) {
+          slides = slides.slice(0, clamped);
+        } else if (slides.length < clamped) {
+          const title = prev.presentationTitle || idea || 'APRESENTAÇÃO DIDÁTICA';
+          for (let i = slides.length; i < clamped; i++) {
+            const isLast = i === clamped - 1;
+            slides.push({
+              pageNumber: i + 1,
+              layoutType: isLast ? 'closing-thankyou' : DEFAULT_LAYOUT_ORDER[i % DEFAULT_LAYOUT_ORDER.length],
+              badge: `PÁGINA 0${i + 1} • CONCEITO`,
+              title: isLast ? 'OBRIGADO PELA ATENÇÃO!' : `TÓPICO 0${i + 1}: DESENVOLVIMENTO`,
+              subtitle: `Compreendendo os conceitos essenciais e a lógica de ${idea || 'estudo'}.`,
+              bodyText: `Explicação clara e organizada em etapas com exemplos práticos para facilitar o aprendizado e a memorização.`,
+              bullets: [
+                'Conceito fundamental e definições básicas',
+                'Exemplos contextualizados no cotidiano',
+                'Resumo dos pontos mais importantes'
+              ],
+              columns: [
+                { number: '01', title: 'CONCEITO BASE', description: 'Definição inicial e regras básicas.' },
+                { number: '02', title: 'DESENVOLVIMENTO', description: 'Como aplicar na prática e exercícios.' },
+                { number: '03', title: 'APLICAÇÕES', description: 'Exemplos reais e resolução passo a passo.' },
+                { number: '04', title: 'CONCLUSÃO', description: 'Síntese final para fixação do conteúdo.' }
+              ],
+              stats: [
+                { value: '95%', label: 'Clareza Didática', description: 'Estruturado para fácil compreensão.' },
+                { value: '3x', label: 'Mais Rápido', description: 'Economiza tempo na preparação de aulas.' },
+                { value: '100%', label: 'Educacional', description: 'Ideal para Ensino Fundamental, Médio e Faculdade.' }
+              ],
+              highlightQuote: `“O conhecimento organizado com clareza transforma temas complexos em aprendizado simples.”`,
+              photoBase64: null,
+              photoCaption: null
+            });
+          }
+        }
+        slides = slides.map((s, idx) => ({ ...s, pageNumber: idx + 1 }));
+        return {
+          ...prev,
+          totalPages: clamped,
+          slides
+        };
+      });
+    }
+
+    setActiveSlideIdx((curr) => Math.min(curr, clamped - 1));
   };
 
   const updatePageLayout = (index, layoutType) => {
@@ -304,6 +353,30 @@ export default function App() {
         columns[colIdx] = { ...columns[colIdx], [field]: value };
       }
       slides[activeSlideIdx] = { ...current, columns };
+      return { ...prev, slides };
+    });
+  };
+
+  const ensureStats = (slide) => {
+    if (slide && slide.stats && slide.stats.length > 0) return slide.stats;
+    return [
+      { value: '95%', label: 'Clareza Didática', description: 'Estruturado para fácil compreensão.' },
+      { value: '3x', label: 'Mais Rápido', description: 'Economiza tempo na preparação de aulas.' },
+      { value: '100%', label: 'Educacional', description: 'Ideal para Ensino Fundamental, Médio e Faculdade.' }
+    ];
+  };
+
+  const updateCurrentSlideStat = (statIdx, field, value) => {
+    if (!presentation || !presentation.slides) return;
+    setPresentation((prev) => {
+      const slides = [...prev.slides];
+      const current = slides[activeSlideIdx];
+      const baseStats = ensureStats(current);
+      const stats = baseStats.map((s) => ({ ...s }));
+      if (stats[statIdx]) {
+        stats[statIdx] = { ...stats[statIdx], [field]: value };
+      }
+      slides[activeSlideIdx] = { ...current, stats };
       return { ...prev, slides };
     });
   };
@@ -587,20 +660,6 @@ export default function App() {
             {/* TAB 1: IDEIA & MATÉRIA */}
             {activeTab === 'ideia' && (
               <div className="edu-tab-content">
-                <div className="edu-card">
-                  <label className="edu-card-title">Qual é o tema do trabalho ou aula?</label>
-                  <textarea
-                    rows={3}
-                    className="edu-input-textarea"
-                    placeholder="Ex: Teorema de Pitágoras e aplicações práticas na arquitetura..."
-                    value={idea}
-                    onChange={(e) => handleIdeaChange(e.target.value)}
-                  />
-                  <span className="edu-tip">
-                    A IA criará títulos didáticos, explicações passo a passo e tópicos claros.
-                  </span>
-                </div>
-
                 <div className="edu-card edu-custom-slide-card">
                   <label className="edu-card-title">Deseja um slide personalizado?</label>
                   <p className="edu-tip" style={{ marginBottom: 10 }}>
@@ -832,125 +891,236 @@ export default function App() {
                   </div>
                 </div>
 
-                {currentSlide && (
-                  <div className="edu-card edu-edit-fields-container">
-                    {/* Título Principal do Slide */}
-                    <div className="edu-edit-field-group">
-                      <label className="edu-edit-label">Título da Página:</label>
-                      <input
-                        type="text"
-                        className="edu-edit-input"
-                        value={currentSlide.title || ''}
-                        onChange={(e) => updateCurrentSlideField('title', e.target.value)}
-                        placeholder="Ex: TEOREMA DE PITÁGORAS E RELAÇÕES"
-                      />
-                    </div>
+                {currentSlide && (() => {
+                  const layoutType = currentSlide.layoutType || 'split-photo-left';
 
-                    {/* Subtítulo */}
-                    <div className="edu-edit-field-group">
-                      <label className="edu-edit-label">Subtítulo / Introdução:</label>
-                      <textarea
-                        rows={2}
-                        className="edu-edit-input"
-                        value={currentSlide.subtitle || ''}
-                        onChange={(e) => updateCurrentSlideField('subtitle', e.target.value)}
-                        placeholder="Ex: Compreendendo os conceitos essenciais e a lógica..."
-                      />
-                    </div>
+                  const hasSubtitle = [
+                    'cover-circle',
+                    'cover-diagonal',
+                    'split-photo-left',
+                    'columns-4',
+                    'grid-4-cards',
+                    'timeline-steps',
+                    'closing-thankyou'
+                  ].includes(layoutType);
 
-                    {/* Texto Corrido (se aplicável ao layout) */}
-                    {currentSlide.bodyText !== undefined && (
+                  const hasBodyText = [
+                    'split-photo-left',
+                    'split-photo-right',
+                    'infographic-stats',
+                    'closing-thankyou'
+                  ].includes(layoutType);
+
+                  const hasBullets = [
+                    'cover-circle',
+                    'cover-diagonal',
+                    'split-photo-left',
+                    'split-photo-right',
+                    'closing-thankyou'
+                  ].includes(layoutType);
+
+                  const hasColumns = [
+                    'columns-4',
+                    'grid-4-cards',
+                    'timeline-steps'
+                  ].includes(layoutType);
+
+                  const hasStats = layoutType === 'infographic-stats';
+                  const isQuoteVision = layoutType === 'quote-vision';
+                  const layoutInfo = PAGE_LAYOUTS.find((l) => l.id === layoutType);
+
+                  return (
+                    <div className="edu-card edu-edit-fields-container">
+                      <div style={{ marginBottom: 4 }}>
+                        <span className="edu-tip" style={{ fontSize: '0.78rem', color: '#94a3b8' }}>
+                          Modelo desta página: <strong style={{ color: '#38bdf8' }}>{layoutInfo ? layoutInfo.name : layoutType}</strong>
+                        </span>
+                      </div>
+
+                      {/* Título Principal do Slide (todos os modelos possuem título) */}
                       <div className="edu-edit-field-group">
-                        <label className="edu-edit-label">Texto / Explicação do Conteúdo:</label>
-                        <textarea
-                          rows={3}
+                        <label className="edu-edit-label">Título da Página {activeSlideIdx + 1}:</label>
+                        <input
+                          type="text"
                           className="edu-edit-input"
-                          value={currentSlide.bodyText || ''}
-                          onChange={(e) => updateCurrentSlideField('bodyText', e.target.value)}
-                          placeholder="Explicação didática detalhada..."
+                          value={currentSlide.title || ''}
+                          onChange={(e) => updateCurrentSlideField('title', e.target.value)}
+                          placeholder="Ex: TEOREMA DE PITÁGORAS E RELAÇÕES"
                         />
                       </div>
-                    )}
 
-                    {/* CARTÕES E COLUNAS 01 A 04 (CONCEITO BASE, DESENVOLVIMENTO, APLICAÇÕES, CONCLUSÃO) */}
-                    <div className="edu-edit-field-group">
-                      <label className="edu-edit-label" style={{ color: '#38bdf8' }}>
-                        Cartões e Tópicos 01 - 04 (Grade e Colunas):
-                      </label>
-                      {ensureColumns(currentSlide).map((col, cIdx) => (
-                        <div key={cIdx} className="edu-column-edit-card">
-                          <div className="edu-column-edit-header">
-                            <span className="edu-column-num-badge">0{cIdx + 1}</span>
-                            <input
-                              type="text"
-                              className="edu-edit-input"
-                              style={{ fontWeight: 'bold' }}
-                              value={col.title || ''}
-                              onChange={(e) =>
-                                updateCurrentSlideColumn(cIdx, 'title', e.target.value)
-                              }
-                              placeholder={`Título do Cartão 0${cIdx + 1} (Ex: CONCEITO BASE)`}
-                            />
-                          </div>
+                      {/* Subtítulo / Introdução (somente modelos que exibem subtítulo) */}
+                      {hasSubtitle && (
+                        <div className="edu-edit-field-group">
+                          <label className="edu-edit-label">Subtítulo / Introdução:</label>
                           <textarea
                             rows={2}
                             className="edu-edit-input"
-                            style={{ marginTop: 4 }}
-                            value={col.description || ''}
-                            onChange={(e) =>
-                              updateCurrentSlideColumn(cIdx, 'description', e.target.value)
-                            }
-                            placeholder={`Descrição do Cartão 0${cIdx + 1} (Ex: Definição inicial e regras básicas.)`}
+                            value={currentSlide.subtitle || ''}
+                            onChange={(e) => updateCurrentSlideField('subtitle', e.target.value)}
+                            placeholder="Ex: Compreendendo os conceitos essenciais e a lógica..."
                           />
                         </div>
-                      ))}
-                    </div>
+                      )}
 
-                    {/* TÓPICOS EM MARCADORES (BULLETS) */}
-                    <div className="edu-edit-field-group">
-                      <label className="edu-edit-label">Pontos em Tópicos (Lista):</label>
-                      {(currentSlide.bullets || []).map((bullet, bIdx) => (
-                        <div key={bIdx} className="edu-bullet-edit-row">
-                          <span className="edu-bullet-num">▸ {bIdx + 1}</span>
-                          <input
-                            type="text"
-                            className="edu-edit-input"
-                            style={{ flex: 1 }}
-                            value={bullet}
-                            onChange={(e) => updateCurrentSlideBullet(bIdx, e.target.value)}
-                            placeholder={`Ponto ${bIdx + 1}...`}
-                          />
-                        </div>
-                      ))}
-                    </div>
-
-                    {/* CITAÇÃO / FRASE (se layout quote-vision) */}
-                    {currentSlide.layoutType === 'quote-vision' && (
-                      <>
+                      {/* Texto Corrido (somente modelos que possuem parágrafo explicativo) */}
+                      {hasBodyText && (
                         <div className="edu-edit-field-group">
-                          <label className="edu-edit-label">Frase de Destaque:</label>
+                          <label className="edu-edit-label">Texto / Explicação do Conteúdo:</label>
                           <textarea
                             rows={3}
                             className="edu-edit-input"
-                            value={currentSlide.quoteText || ''}
-                            onChange={(e) => updateCurrentSlideField('quoteText', e.target.value)}
-                            placeholder="Frase inspiradora ou citação..."
+                            value={currentSlide.bodyText || ''}
+                            onChange={(e) => updateCurrentSlideField('bodyText', e.target.value)}
+                            placeholder="Explicação didática detalhada..."
                           />
                         </div>
+                      )}
+
+                      {/* CARTÕES E TÓPICOS 01 - 04 (SOMENTE em modelos com grade/colunas/etapas!) */}
+                      {hasColumns && (
                         <div className="edu-edit-field-group">
-                          <label className="edu-edit-label">Autor da Frase:</label>
-                          <input
-                            type="text"
-                            className="edu-edit-input"
-                            value={currentSlide.quoteAuthor || ''}
-                            onChange={(e) => updateCurrentSlideField('quoteAuthor', e.target.value)}
-                            placeholder="Ex: Galileu Galilei"
-                          />
+                          <label className="edu-edit-label" style={{ color: '#38bdf8' }}>
+                            Cartões e Tópicos 01 - 04 (Grade e Colunas):
+                          </label>
+                          {ensureColumns(currentSlide).slice(0, 4).map((col, cIdx) => (
+                            <div key={cIdx} className="edu-column-edit-card">
+                              <div className="edu-column-edit-header">
+                                <span className="edu-column-num-badge">0{cIdx + 1}</span>
+                                <input
+                                  type="text"
+                                  className="edu-edit-input"
+                                  style={{ fontWeight: 'bold' }}
+                                  value={col.title || ''}
+                                  onChange={(e) =>
+                                    updateCurrentSlideColumn(cIdx, 'title', e.target.value)
+                                  }
+                                  placeholder={`Título do Cartão 0${cIdx + 1} (Ex: CONCEITO BASE)`}
+                                />
+                              </div>
+                              <textarea
+                                rows={2}
+                                className="edu-edit-input"
+                                style={{ marginTop: 4 }}
+                                value={col.description || ''}
+                                onChange={(e) =>
+                                  updateCurrentSlideColumn(cIdx, 'description', e.target.value)
+                                }
+                                placeholder={`Descrição do Cartão 0${cIdx + 1} (Ex: Definição inicial e regras básicas.)`}
+                              />
+                            </div>
+                          ))}
                         </div>
-                      </>
-                    )}
-                  </div>
-                )}
+                      )}
+
+                      {/* ESTATÍSTICAS E MÉTRICAS (SOMENTE para o modelo infográfico com estatísticas!) */}
+                      {hasStats && (
+                        <div className="edu-edit-field-group">
+                          <label className="edu-edit-label" style={{ color: '#38bdf8' }}>
+                            Estatísticas e Métricas (01 a 03):
+                          </label>
+                          {ensureStats(currentSlide).slice(0, 3).map((st, sIdx) => (
+                            <div key={sIdx} className="edu-column-edit-card">
+                              <div className="edu-column-edit-header" style={{ gap: 8, display: 'flex' }}>
+                                <input
+                                  type="text"
+                                  className="edu-edit-input"
+                                  style={{ width: '85px', fontWeight: 'bold', color: '#38bdf8', textAlign: 'center' }}
+                                  value={st.value || ''}
+                                  onChange={(e) => updateCurrentSlideStat(sIdx, 'value', e.target.value)}
+                                  placeholder="Ex: 95%"
+                                />
+                                <input
+                                  type="text"
+                                  className="edu-edit-input"
+                                  style={{ flex: 1, fontWeight: 'bold' }}
+                                  value={st.label || ''}
+                                  onChange={(e) => updateCurrentSlideStat(sIdx, 'label', e.target.value)}
+                                  placeholder="Ex: Clareza Didática"
+                                />
+                              </div>
+                              <textarea
+                                rows={2}
+                                className="edu-edit-input"
+                                style={{ marginTop: 4 }}
+                                value={st.description || ''}
+                                onChange={(e) => updateCurrentSlideStat(sIdx, 'description', e.target.value)}
+                                placeholder="Ex: Estruturado para fácil compreensão."
+                              />
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* TÓPICOS EM MARCADORES (SOMENTE em modelos com lista de pontos/bullets!) */}
+                      {hasBullets && (
+                        <div className="edu-edit-field-group">
+                          <label className="edu-edit-label">Pontos em Tópicos (Lista):</label>
+                          {(currentSlide.bullets || []).slice(0, 3).map((bullet, bIdx) => (
+                            <div key={bIdx} className="edu-bullet-edit-row">
+                              <span className="edu-bullet-num">▸ {bIdx + 1}</span>
+                              <input
+                                type="text"
+                                className="edu-edit-input"
+                                style={{ flex: 1 }}
+                                value={bullet}
+                                onChange={(e) => updateCurrentSlideBullet(bIdx, e.target.value)}
+                                placeholder={`Ponto ${bIdx + 1}...`}
+                              />
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* CITAÇÃO / FRASE & CAIXAS (SOMENTE se layout quote-vision) */}
+                      {isQuoteVision && (
+                        <>
+                          <div className="edu-edit-field-group">
+                            <label className="edu-edit-label">Frase de Destaque / Citação:</label>
+                            <textarea
+                              rows={3}
+                              className="edu-edit-input"
+                              value={currentSlide.highlightQuote || currentSlide.quoteText || ''}
+                              onChange={(e) => {
+                                updateCurrentSlideField('highlightQuote', e.target.value);
+                                updateCurrentSlideField('quoteText', e.target.value);
+                              }}
+                              placeholder="Frase inspiradora ou citação..."
+                            />
+                          </div>
+                          <div className="edu-edit-field-group">
+                            <label className="edu-edit-label" style={{ color: '#38bdf8' }}>
+                              Quadros de Destaque (01 e 02):
+                            </label>
+                            {ensureColumns(currentSlide).slice(0, 2).map((col, cIdx) => (
+                              <div key={cIdx} className="edu-column-edit-card">
+                                <div className="edu-column-edit-header">
+                                  <span className="edu-column-num-badge">0{cIdx + 1}</span>
+                                  <input
+                                    type="text"
+                                    className="edu-edit-input"
+                                    style={{ fontWeight: 'bold' }}
+                                    value={col.title || ''}
+                                    onChange={(e) => updateCurrentSlideColumn(cIdx, 'title', e.target.value)}
+                                    placeholder={`Título do Quadro 0${cIdx + 1}`}
+                                  />
+                                </div>
+                                <textarea
+                                  rows={2}
+                                  className="edu-edit-input"
+                                  style={{ marginTop: 4 }}
+                                  value={col.description || ''}
+                                  onChange={(e) => updateCurrentSlideColumn(cIdx, 'description', e.target.value)}
+                                  placeholder="Descrição do quadro..."
+                                />
+                              </div>
+                            ))}
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  );
+                })()}
               </div>
             )}
 
@@ -1191,9 +1361,6 @@ export default function App() {
         onPaymentSuccess={handlePaymentSuccess}
         primaryColor={displayPrimary}
       />
-
-      {/* Central de Suporte por WhatsApp (61) 9 8582-3912 */}
-      <WhatsAppSupport />
     </div>
   );
 }
