@@ -236,6 +236,7 @@ body {
 .edu-panel-body {
   flex: 1;
   overflow-y: auto;
+  overflow-x: hidden;
   padding: 16px;
 }
 
@@ -909,6 +910,23 @@ body {
 /* =========================================================
    CLEAN SLIDE CANVAS (DIDACTIC, HIGH CONTRAST & READABLE)
    ========================================================= */
+.slide-scale-outer {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.slide-scale-inner {
+  transform-origin: center center;
+  flex-shrink: 0;
+  position: relative;
+  overflow: hidden;
+}
+
 .slide-canvas-16x9 {
   width: 100%;
   height: 100%;
@@ -983,13 +1001,16 @@ body {
 }
 
 .cc-left-bg {
-  width: 60%;
+  width: 52%;
+  max-width: 52%;
   height: 100%;
-  padding: 5% 8% 8% 5%;
+  padding: 5% 4% 6% 5%;
   color: #fff;
   position: relative;
   display: flex;
   flex-direction: column;
+  z-index: 2;
+  box-sizing: border-box;
 }
 
 .cc-badge {
@@ -1011,10 +1032,15 @@ body {
 }
 
 .cc-title {
-  font-size: clamp(1.4rem, 2.4vw, 2.2rem);
+  font-size: 1.85rem;
   font-weight: 900;
   line-height: 1.15;
   margin-bottom: 12px;
+  max-width: 95%;
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .cc-divider {
@@ -1024,10 +1050,15 @@ body {
 }
 
 .cc-subtitle {
-  font-size: clamp(0.78rem, 1.1vw, 0.98rem);
+  font-size: 0.9rem;
   opacity: 0.95;
   line-height: 1.45;
   margin-bottom: 14px;
+  max-width: 95%;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .cc-bullets {
@@ -1044,6 +1075,10 @@ body {
   border-radius: 5px;
   font-size: 0.74rem;
   font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 95%;
 }
 
 .cc-bottom-bars {
@@ -1057,10 +1092,11 @@ body {
 }
 
 .cc-right-bg {
-  width: 40%;
+  width: 48%;
   height: 100%;
   position: relative;
   background: #fff;
+  overflow: hidden;
 }
 
 .cc-top-right-bar {
@@ -1073,9 +1109,11 @@ body {
 
 .cc-circle-wrapper {
   position: absolute;
-  left: -32%;
-  top: 15%;
-  width: 88%;
+  right: 4%;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 370px;
+  height: 370px;
   aspect-ratio: 1 / 1;
   border-radius: 50%;
   background: #fff;
@@ -1083,6 +1121,7 @@ body {
   border: 6px solid #1e293b;
   box-shadow: 0 10px 28px rgba(0, 0, 0, 0.2);
   overflow: hidden;
+  z-index: 3;
 }
 
 .cc-circle-photo {
@@ -1221,8 +1260,12 @@ body {
 
 .spl-content {
   flex: 1;
-  padding: 5.5% 5% 5% 4%;
+  padding: 4% 5% 44px 4%;
   z-index: 2;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-sizing: border-box;
 }
 
 .spl-badge {
@@ -1233,46 +1276,67 @@ body {
 }
 
 .spl-title {
-  font-size: clamp(1.2rem, 1.9vw, 1.7rem);
+  font-size: 1.45rem;
   font-weight: 900;
-  line-height: 1.18;
+  line-height: 1.15;
   margin-bottom: 8px;
   color: #0f172a !important; /* Always readable black/navy */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .spl-bar {
   width: 55px;
   height: 4px;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
 }
 
 .spl-subtitle {
-  font-size: 0.88rem;
+  font-size: 0.84rem;
   font-weight: 700;
   color: #1e293b;
   margin-bottom: 8px;
   line-height: 1.35;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .spl-body {
-  font-size: 0.78rem;
+  font-size: 0.76rem;
   color: #334155;
-  line-height: 1.45;
-  margin-bottom: 14px;
+  line-height: 1.4;
+  margin-bottom: 10px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .spl-bullets {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
+  margin-top: auto;
 }
 
 .spl-bullet-row {
   display: flex;
   align-items: flex-start;
   gap: 8px;
-  font-size: 0.76rem;
+  font-size: 0.75rem;
   color: #0f172a;
+}
+
+.spl-bullet-row p {
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .spl-num {
@@ -1300,8 +1364,12 @@ body {
 
 .spr-content {
   width: 55%;
-  padding: 5.5% 3% 5% 5%;
+  padding: 4% 4% 44px 5%;
   z-index: 2;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-sizing: border-box;
 }
 
 .spr-badge {
@@ -1313,39 +1381,53 @@ body {
 }
 
 .spr-title {
-  font-size: clamp(1.2rem, 1.9vw, 1.7rem);
+  font-size: 1.45rem;
   font-weight: 900;
   color: #0f172a !important;
   margin-bottom: 8px;
+  line-height: 1.15;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .spr-bar {
   width: 55px;
   height: 4px;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
 }
 
 .spr-body {
-  font-size: 0.78rem;
+  font-size: 0.76rem;
   color: #334155;
-  line-height: 1.45;
-  margin-bottom: 14px;
+  line-height: 1.4;
+  margin-bottom: 10px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .spr-cards {
   display: flex;
   flex-direction: column;
   gap: 6px;
+  margin-top: auto;
 }
 
 .spr-card-item {
   background: #f8fafc;
-  border-left: 4px solid;
-  padding: 8px 10px;
-  border-radius: 5px;
-  font-size: 0.76rem;
+  border-left: 4px solid #2563eb;
+  padding: 6px 10px;
+  border-radius: 0 6px 6px 0;
+  font-size: 0.74rem;
+  color: #1e293b;
   font-weight: 600;
-  color: #0f172a;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .spr-right-pillar {
@@ -1397,7 +1479,7 @@ body {
 }
 
 .c4-header h2 {
-  font-size: clamp(1.1rem, 1.7vw, 1.55rem);
+  font-size: 1.5rem;
   font-weight: 900;
   margin: 2px 0;
 }
@@ -1466,6 +1548,10 @@ body {
   font-size: 0.7rem;
   color: #334155;
   line-height: 1.38;
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .c4-card-foot {
@@ -1567,6 +1653,10 @@ body {
   font-size: 0.71rem;
   color: #334155;
   line-height: 1.35;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 /* 7. INFOGRAPHIC STATS - 3 PILARES EM DESTAQUE COM CÍRCULOS (Inspirado no modelo genérico da Ref.) */
@@ -1689,6 +1779,10 @@ body {
   color: #475569;
   line-height: 1.4;
   margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 /* 8. TIMELINE STEPS */
@@ -1811,6 +1905,10 @@ body {
   font-size: 0.69rem;
   color: #334155;
   line-height: 1.38;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 /* 9. QUOTE & VISION */
@@ -1857,6 +1955,10 @@ body {
   font-size: 0.86rem;
   font-weight: 700;
   line-height: 1.45;
+  display: -webkit-box;
+  -webkit-line-clamp: 5;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .qv-right-content {
@@ -1905,6 +2007,10 @@ body {
 .qv-box p {
   font-size: 0.73rem;
   line-height: 1.42;
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 /* 10. CLOSING THANK YOU */
@@ -1915,10 +2021,12 @@ body {
 
 .cl-left {
   width: 60%;
-  padding: 6% 4% 10% 5%;
+  padding: 5% 4% 44px 5%;
   position: relative;
   display: flex;
   flex-direction: column;
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
 .cl-badge {
@@ -3530,12 +3638,14 @@ body {
 }
 
 .edu-layout-card-title {
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   color: #f8fafc;
   font-weight: 700;
-  white-space: nowrap;
+  line-height: 1.25;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
   overflow: hidden;
-  text-overflow: ellipsis;
   min-width: 0;
   flex: 1;
 }

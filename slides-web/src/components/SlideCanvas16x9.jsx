@@ -1,6 +1,48 @@
-import React from 'react';
+import React, { useLayoutEffect, useRef, useState } from 'react';
 
-export default function SlideCanvas16x9({
+// Resolução base de desenho do slide. O slide é sempre montado neste tamanho
+// e depois escalado proporcionalmente (transform: scale) para caber no espaço
+// disponível. Assim o texto nunca é cortado em celulares/tablets.
+const BASE_W = 896;
+const BASE_H = 504;
+
+export default function SlideCanvas16x9(props) {
+  const outerRef = useRef(null);
+  const [scale, setScale] = useState(1);
+
+  useLayoutEffect(() => {
+    const el = outerRef.current;
+    if (!el) return undefined;
+
+    const update = () => {
+      const w = el.clientWidth;
+      const h = el.clientHeight;
+      if (!w) return; // elemento oculto (ex.: área de impressão) mantém escala anterior
+      const s = h ? Math.min(w / BASE_W, h / BASE_H) : w / BASE_W;
+      setScale(s);
+    };
+
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  if (!props.slide) return null;
+
+  return (
+    <div className="slide-scale-outer" ref={outerRef}>
+      <div
+        className="slide-scale-inner"
+        style={{ width: BASE_W, height: BASE_H, transform: `scale(${scale})` }}
+      >
+        <SlideCanvasContent {...props} />
+      </div>
+    </div>
+  );
+}
+
+function SlideCanvasContent({
   slide,
   pageIndex,
   totalPages,

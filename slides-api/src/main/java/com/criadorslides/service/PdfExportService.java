@@ -169,8 +169,8 @@ public class PdfExportService {
         g.setColor(blend(primary, Color.WHITE, 0.35f));
         g.fillRect(1620, 90, 300, 28);
 
-        // Circular Photo Frame overlapping boundary at (1230, 510) radius 360
-        int cx = 1260, cy = 510, r = 350;
+        // Circular Photo Frame shifted right to never overlap text
+        int cx = 1340, cy = 540, r = 340;
         g.setColor(Color.WHITE);
         g.fillOval(cx - r - 24, cy - r - 24, (r + 24) * 2, (r + 24) * 2);
 
@@ -297,12 +297,12 @@ public class PdfExportService {
 
         g.setColor(new Color(71, 85, 105));
         g.setFont(new Font("SansSerif", Font.PLAIN, 24));
-        y = drawWrappedText(g, safe(slide.getBodyText(), ""), rx, y + 25, 940, 36, 5);
+        y = drawWrappedText(g, safe(slide.getBodyText(), ""), rx, y + 25, 940, 36, 3);
 
         // Bullets with numbered badges
         List<String> bullets = slide.getBullets();
         if (bullets != null && !bullets.isEmpty()) {
-            int by = Math.max(y + 30, 620);
+            int by = Math.min(Math.max(y + 25, 600), 730);
             for (int i = 0; i < Math.min(3, bullets.size()); i++) {
                 g.setColor(primary);
                 g.fillRoundRect(rx, by - 32, 48, 42, 10, 10);
@@ -313,7 +313,7 @@ public class PdfExportService {
                 g.setColor(secondary);
                 g.setFont(new Font("SansSerif", Font.PLAIN, 23));
                 drawWrappedText(g, bullets.get(i), rx + 68, by - 4, 870, 30, 2);
-                by += 78;
+                by += 72;
             }
         }
     }
@@ -345,22 +345,22 @@ public class PdfExportService {
 
         g.setColor(new Color(71, 85, 105));
         g.setFont(new Font("SansSerif", Font.PLAIN, 25));
-        y = drawWrappedText(g, safe(slide.getBodyText(), ""), lx, y + 60, 900, 38, 5);
+        y = drawWrappedText(g, safe(slide.getBodyText(), ""), lx, y + 45, 900, 36, 3);
 
         // Highlight cards on left bottom
         List<String> bullets = slide.getBullets();
         if (bullets != null && !bullets.isEmpty()) {
-            int by = Math.max(y + 35, 590);
+            int by = Math.min(Math.max(y + 25, 580), 650);
             for (int i = 0; i < Math.min(3, bullets.size()); i++) {
                 g.setColor(new Color(248, 250, 252));
-                g.fillRoundRect(lx, by, 900, 86, 14, 14);
+                g.fillRoundRect(lx, by, 900, 80, 14, 14);
                 g.setColor(i % 2 == 0 ? primary : secondary);
-                g.fillRoundRect(lx, by, 12, 86, 6, 6);
+                g.fillRoundRect(lx, by, 12, 80, 6, 6);
 
                 g.setColor(secondary);
                 g.setFont(new Font("SansSerif", Font.BOLD, 22));
-                drawWrappedText(g, bullets.get(i), lx + 34, by + 36, 840, 28, 2);
-                by += 104;
+                drawWrappedText(g, bullets.get(i), lx + 34, by + 34, 840, 26, 2);
+                by += 96;
             }
         }
     }
