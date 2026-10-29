@@ -33,6 +33,7 @@ import LayoutMiniPreview from './components/LayoutMiniPreview';
 import SlideCanvas16x9 from './components/SlideCanvas16x9';
 import PaymentModal from './components/PaymentModal';
 import PdfPreviewModal from './components/PdfPreviewModal';
+import VisualLayoutSelectorModal from './components/VisualLayoutSelectorModal';
 
 const DEFAULT_LAYOUT_ORDER = [
   'cover-circle',
@@ -85,6 +86,10 @@ export default function App() {
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [paidPaymentId, setPaidPaymentId] = useState(null);
   const [isPreviewPdfOpen, setIsPreviewPdfOpen] = useState(false);
+
+  // Visual Layout Selector Modal
+  const [isLayoutModalOpen, setIsLayoutModalOpen] = useState(false);
+  const [layoutModalPageIdx, setLayoutModalPageIdx] = useState(0);
 
   // Texto do Trabalho para Geração Automática com IA
   const [assignmentText, setAssignmentText] = useState('');
@@ -603,9 +608,9 @@ export default function App() {
           { number: '04', title: 'CONCLUSÃO', description: bulletsPool[3] || 'Síntese final para fixação do conteúdo.' }
         ],
         stats: [
-          { value: '95%', label: 'Clareza Didática', description: 'Estruturado para fácil compreensão.' },
-          { value: '3x', label: 'Mais Rápido', description: 'Economiza tempo na preparação de aulas.' },
-          { value: '100%', label: 'Educacional', description: 'Ideal para Ensino Fundamental, Médio e Faculdade.' }
+          { value: '01', label: bulletsPool[0] ? bulletsPool[0].slice(0, 30).toUpperCase() : 'CONCEITO BASE', description: bulletsPool[0] || 'Fundamentos e princípios do conteúdo.' },
+          { value: '02', label: bulletsPool[1] ? bulletsPool[1].slice(0, 30).toUpperCase() : 'DESENVOLVIMENTO', description: bulletsPool[1] || 'Aprofundamento e aplicações práticas.' },
+          { value: '03', label: bulletsPool[2] ? bulletsPool[2].slice(0, 30).toUpperCase() : 'SÍNTESE & RESULTADOS', description: bulletsPool[2] || 'Conclusões e impacto dos conceitos estudados.' }
         ],
         highlightQuote: `“${sentences[0] ? sentences[0].slice(0, 120) : 'O conhecimento organizado transforma temas complexos em aprendizado simples.'}”`,
         photoBase64: null,
@@ -957,26 +962,40 @@ export default function App() {
                             {pNum}
                           </div>
 
-                          <div className="edu-page-preview-box">
+                          <div
+                            className="edu-page-preview-box"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setActiveSlideIdx(idx);
+                              setLayoutModalPageIdx(idx);
+                              setIsLayoutModalOpen(true);
+                            }}
+                            title="Toque para ver e trocar o modelo visual deste slide"
+                          >
                             <LayoutMiniPreview
                               layoutId={cfg.layoutType}
                               primary={displayPrimary}
                               secondary={displaySecondary}
                             />
+                            <span className="edu-preview-tap-hint">Trocar Modelo</span>
                           </div>
 
                           <div className="edu-page-select-area" onClick={(e) => e.stopPropagation()}>
-                            <select
-                              value={cfg.layoutType}
-                              onChange={(e) => updatePageLayout(idx, e.target.value)}
-                              className="edu-clean-select"
+                            <button
+                              type="button"
+                              className="edu-btn-change-layout"
+                              onClick={() => {
+                                setActiveSlideIdx(idx);
+                                setLayoutModalPageIdx(idx);
+                                setIsLayoutModalOpen(true);
+                              }}
+                              title="Toque para ver todos os modelos de slides com imagens"
                             >
-                              {PAGE_LAYOUTS.map((l) => (
-                                <option key={l.id} value={l.id}>
-                                  {l.name}
-                                </option>
-                              ))}
-                            </select>
+                              <span className="edu-layout-name-display">
+                                {PAGE_LAYOUTS.find((l) => l.id === cfg.layoutType)?.name || cfg.layoutType}
+                              </span>
+                              <span className="edu-layout-picker-pill">Ver Modelos ▾</span>
+                            </button>
 
                             {/* Direct Photo Upload Control on this page */}
                             <div className="edu-page-photo-bar" onClick={(e) => e.stopPropagation()}>
@@ -1253,11 +1272,11 @@ export default function App() {
                         </div>
                       )}
 
-                      {/* ESTATÍSTICAS E MÉTRICAS (SOMENTE para o modelo infográfico com estatísticas!) */}
+                      {/* 3 PILARES EM DESTAQUE COM CÍRCULOS */}
                       {hasStats && (
                         <div className="edu-edit-field-group">
                           <label className="edu-edit-label" style={{ color: '#38bdf8' }}>
-                            Estatísticas e Métricas (01 a 03):
+                            3 Pilares em Destaque (Círculo, Título e Descrição):
                           </label>
                           {ensureStats(currentSlide).slice(0, 3).map((st, sIdx) => (
                             <div key={sIdx} className="edu-column-edit-card">
@@ -1268,7 +1287,7 @@ export default function App() {
                                   style={{ width: '85px', fontWeight: 'bold', color: '#38bdf8', textAlign: 'center' }}
                                   value={st.value || ''}
                                   onChange={(e) => updateCurrentSlideStat(sIdx, 'value', e.target.value)}
-                                  placeholder="Ex: 95%"
+                                  placeholder={`0${sIdx + 1}`}
                                 />
                                 <input
                                   type="text"
@@ -1276,7 +1295,7 @@ export default function App() {
                                   style={{ flex: 1, fontWeight: 'bold' }}
                                   value={st.label || ''}
                                   onChange={(e) => updateCurrentSlideStat(sIdx, 'label', e.target.value)}
-                                  placeholder="Ex: Clareza Didática"
+                                  placeholder={`Título do Pilar 0${sIdx + 1}`}
                                 />
                               </div>
                               <textarea
@@ -1285,7 +1304,7 @@ export default function App() {
                                 style={{ marginTop: 4 }}
                                 value={st.description || ''}
                                 onChange={(e) => updateCurrentSlideStat(sIdx, 'description', e.target.value)}
-                                placeholder="Ex: Estruturado para fácil compreensão."
+                                placeholder={`Descrição do Pilar 0${sIdx + 1}`}
                               />
                             </div>
                           ))}
@@ -1601,6 +1620,17 @@ export default function App() {
         onPaymentSuccess={handlePaymentSuccess}
         primaryColor={displayPrimary}
       />
+
+      {/* Visual Layout Selector Modal with rich responsive previews */}
+      <VisualLayoutSelectorModal
+        isOpen={isLayoutModalOpen}
+        onClose={() => setIsLayoutModalOpen(false)}
+        pageIndex={layoutModalPageIdx}
+        currentLayout={pageConfigs[layoutModalPageIdx]?.layoutType}
+        onSelectLayout={(newLayoutId) => updatePageLayout(layoutModalPageIdx, newLayoutId)}
+        primaryColor={displayPrimary}
+        secondaryColor={displaySecondary}
+      />
     </div>
   );
 }
@@ -1635,9 +1665,9 @@ function buildLocalFallbackPresentation(payload) {
       { number: '04', title: 'CONCLUSÃO', description: 'Síntese final para fixação do conteúdo.' }
     ],
     stats: [
-      { value: '95%', label: 'Clareza Didática', description: 'Estruturado para fácil compreensão.' },
-      { value: '3x', label: 'Mais Rápido', description: 'Economiza tempo na preparação de aulas.' },
-      { value: '100%', label: 'Educacional', description: 'Ideal para Ensino Fundamental, Médio e Faculdade.' }
+      { value: '01', label: 'PRIMEIRO PILAR', description: 'Visão geral e fundamentos essenciais do tema abordado.' },
+      { value: '02', label: 'SEGUNDO PILAR', description: 'Metodologia, aplicações práticas e aprofundamento.' },
+      { value: '03', label: 'TERCEIRO PILAR', description: 'Resultados esperados, conclusões e desdobramentos.' }
     ],
     highlightQuote: `“O conhecimento organizado com clareza transforma temas complexos em aprendizado simples.”`,
     photoBase64: p.photoBase64 || null,

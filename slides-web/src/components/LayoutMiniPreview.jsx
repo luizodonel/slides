@@ -96,17 +96,19 @@ export default function LayoutMiniPreview({ layoutId, primary = '#F97316', secon
       return (
         <svg viewBox="0 0 160 90" className="layout-mini-svg">
           <rect width="160" height="90" fill="#ffffff" />
-          <rect x="0" y="0" width="72" height="90" fill={secondary} />
-          <rect x="12" y="52" width="8" height="22" fill="#ffffff" />
-          <rect x="24" y="42" width="8" height="32" fill={primary} />
-          <rect x="36" y="48" width="8" height="26" fill="#ffffff" />
-          <rect x="48" y="34" width="8" height="40" fill={primary} />
-          <circle cx="92" cy="24" r="9" fill="none" stroke={primary} strokeWidth="4" />
-          <rect x="108" y="20" width="36" height="6" rx="2" fill={secondary} />
-          <circle cx="92" cy="48" r="9" fill="none" stroke={secondary} strokeWidth="4" />
-          <rect x="108" y="44" width="36" height="6" rx="2" fill={secondary} />
-          <circle cx="92" cy="72" r="9" fill="none" stroke={primary} strokeWidth="4" />
-          <rect x="108" y="68" width="36" height="6" rx="2" fill={secondary} />
+          <rect x="0" y="0" width="62" height="90" fill={secondary} />
+          <rect x="8" y="22" width="46" height="8" rx="2" fill="#ffffff" />
+          <rect x="8" y="34" width="38" height="5" rx="1" fill="#ffffffaa" />
+          <rect x="8" y="44" width="42" height="4" rx="1" fill="#ffffff66" />
+          <rect x="8" y="74" width="46" height="4" rx="1" fill={primary} />
+          {[0, 1, 2].map((i) => (
+            <g key={i}>
+              <rect x="70" y={14 + i * 24} width="82" height="20" rx="3" fill="#f8fafc" stroke="#e2e8f0" strokeWidth="1" />
+              <circle cx="82" cy={24 + i * 24} r="6" fill={i % 2 === 0 ? primary : secondary} />
+              <rect x="94" y={19 + i * 24} width="36" height="4" rx="1" fill={secondary} />
+              <rect x="94" y={25 + i * 24} width="50" height="3" rx="1" fill="#94a3b8" />
+            </g>
+          ))}
         </svg>
       );
 

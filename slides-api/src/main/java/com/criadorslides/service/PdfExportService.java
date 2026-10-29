@@ -183,13 +183,6 @@ public class PdfExportService {
         drawPhotoOrPlaceholder(g, photo, cx - r, cy - r, r * 2, r * 2, primary, secondary, slide.getPhotoCaption());
         g.setClip(oldClip);
 
-        // Logo / Badge at top-left
-        g.setColor(Color.WHITE);
-        Polygon diamond = new Polygon(new int[]{110, 132, 110, 88}, new int[]{118, 140, 162, 140}, 4);
-        g.fillPolygon(diamond);
-        g.setFont(new Font("SansSerif", Font.BOLD, 22));
-        g.drawString(safe(slide.getBadge(), "APRESENTAÇÃO OFICIAL"), 150, 148);
-
         // Main Cover Title
         g.setColor(Color.WHITE);
         g.setFont(new Font("SansSerif", Font.BOLD, 66));
@@ -242,12 +235,6 @@ public class PdfExportService {
         g.fillPolygon(stripe2);
 
         // Left side content
-        g.setColor(primary);
-        g.fillRoundRect(100, 110, 420, 44, 8, 8);
-        g.setColor(Color.WHITE);
-        g.setFont(new Font("SansSerif", Font.BOLD, 19));
-        g.drawString(truncate(safe(slide.getBadge(), "APRESENTAÇÃO"), 36), 120, 139);
-
         g.setColor(secondary);
         g.setFont(new Font("SansSerif", Font.BOLD, 64));
         int y = drawWrappedText(g, safe(slide.getTitle(), "TÍTULO DO SLIDE"), 100, 265, 760, 76, 4);
@@ -297,10 +284,6 @@ public class PdfExportService {
 
         // Right side content (x = 860 .. 1820)
         int rx = 860;
-        g.setColor(primary);
-        g.setFont(new Font("SansSerif", Font.BOLD, 20));
-        g.drawString(safe(slide.getBadge(), "INTRODUÇÃO & CONTEXTO"), rx, 155);
-
         g.setColor(secondary);
         g.setFont(new Font("SansSerif", Font.BOLD, 48));
         int y = drawWrappedText(g, safe(slide.getTitle(), "TÍTULO DA SEÇÃO"), rx, 220, 960, 58, 3);
@@ -353,11 +336,6 @@ public class PdfExportService {
 
         // Left side content (x = 100 .. 990)
         int lx = 100;
-        g.setColor(primary);
-        g.fillRect(lx, 120, 10, 36);
-        g.setFont(new Font("SansSerif", Font.BOLD, 20));
-        g.drawString(safe(slide.getBadge(), "ANÁLISE PROFUNDA"), lx + 24, 146);
-
         g.setColor(secondary);
         g.setFont(new Font("SansSerif", Font.BOLD, 48));
         int y = drawWrappedText(g, safe(slide.getTitle(), "DESENVOLVIMENTO DO TEMA"), lx, 220, 900, 58, 3);
@@ -401,10 +379,6 @@ public class PdfExportService {
             g.fillRoundRect(WIDTH - 360, 28, 260, 194, 18, 18);
             drawPhotoOrPlaceholder(g, photo, WIDTH - 354, 34, 248, 182, primary, secondary, null);
         }
-
-        g.setColor(primary);
-        g.setFont(new Font("SansSerif", Font.BOLD, 20));
-        g.drawString(safe(slide.getBadge(), "ESTRUTURA EM 4 PILARES"), 100, 75);
 
         g.setColor(Color.WHITE);
         g.setFont(new Font("SansSerif", Font.BOLD, 50));
@@ -484,9 +458,6 @@ public class PdfExportService {
         }
 
         g.setColor(Color.WHITE);
-        g.setFont(new Font("SansSerif", Font.BOLD, 20));
-        g.drawString(safe(slide.getBadge(), "MATRIZ DE CONCEITOS"), 100, 75);
-
         g.setFont(new Font("SansSerif", Font.BOLD, 52));
         drawWrappedText(g, safe(slide.getTitle(), "CONCEITOS E APLICAÇÕES"), 100, 145, 1050, 60, 2);
 
@@ -542,9 +513,9 @@ public class PdfExportService {
         }
     }
 
-    // 7. INFOGRAPHIC STATS (Inspired by Image 5 middle-left 43% / 18YR & middle-center bar/donut chart)
+    // 7. INFOGRAPHIC STATS / 3 PILARES EM DESTAQUE COM CÍRCULOS (Inspirado no modelo genérico da Ref.)
     private void renderInfographicStats(Graphics2D g, SlidePageDto slide, Color primary, Color secondary, BufferedImage photo) {
-        // Left dark/secondary panel with bar chart or uploaded photo
+        // Left dark/secondary panel
         g.setColor(secondary);
         g.fillRect(0, 0, 860, HEIGHT);
 
@@ -556,80 +527,82 @@ public class PdfExportService {
         g.setColor(blend(secondary, Color.WHITE, 0.15f));
         g.fillRect(580, HEIGHT - 120, 280, 120);
 
-        g.setColor(primary);
-        g.setFont(new Font("SansSerif", Font.BOLD, 20));
-        g.drawString(safe(slide.getBadge(), "ANÁLISE DE DADOS & MÉTRICAS"), 80, 110);
-
         g.setColor(Color.WHITE);
-        g.setFont(new Font("SansSerif", Font.BOLD, 46));
-        int ly = drawWrappedText(g, safe(slide.getTitle(), "INDICADORES E ESTATÍSTICAS"), 80, 175, 700, 56, 3);
+        g.setFont(new Font("SansSerif", Font.BOLD, 52));
+        int ly = drawWrappedText(g, safe(slide.getTitle(), "PILARES & DIRETRIZES"), 80, 210, 700, 62, 3);
+
+        g.setColor(primary);
+        g.fillRect(80, ly + 15, 80, 6);
+
+        if (slide.getSubtitle() != null && !slide.getSubtitle().isBlank()) {
+            g.setColor(Color.WHITE);
+            g.setFont(new Font("SansSerif", Font.BOLD, 26));
+            ly = drawWrappedText(g, slide.getSubtitle(), 80, ly + 55, 700, 36, 2);
+        }
 
         g.setColor(new Color(203, 213, 225));
         g.setFont(new Font("SansSerif", Font.PLAIN, 23));
-        ly = drawWrappedText(g, safe(slide.getBodyText(), ""), 80, ly + 30, 700, 34, 4);
+        ly = drawWrappedText(g, safe(slide.getBodyText(), ""), 80, ly + 40, 700, 34, 4);
 
         if (photo != null) {
             // Show user's uploaded photo inside left panel
             g.setColor(Color.WHITE);
-            g.fillRoundRect(80, 490, 700, 410, 16, 16);
-            drawPhotoOrPlaceholder(g, photo, 86, 496, 688, 398, primary, secondary, slide.getPhotoCaption());
-        } else {
-            // Draw executive bar chart (matching Image 5 middle-center)
-            int chartX = 90, chartY = 520, chartW = 670, chartH = 340;
-            g.setColor(new Color(255, 255, 255, 30));
-            for (int r = 0; r <= 4; r++) {
-                int gy = chartY + (r * chartH / 4);
-                g.drawLine(chartX, gy, chartX + chartW, gy);
-            }
-            int[] heights = {140, 210, 175, 270, 230, 310};
-            int barW = 58;
-            int barGap = 48;
-            for (int b = 0; b < heights.length; b++) {
-                int bx = chartX + 35 + b * (barW + barGap);
-                int bh = heights[b];
-                int by = chartY + chartH - bh;
-                g.setColor(b % 2 == 0 ? Color.WHITE : primary);
-                g.fillRoundRect(bx, by, barW, bh, 8, 8);
-                g.setColor(new Color(203, 213, 225));
-                g.setFont(new Font("SansSerif", Font.BOLD, 16));
-                g.drawString("P" + (b + 1), bx + 16, chartY + chartH + 28);
-            }
+            g.fillRoundRect(80, ly + 25, 700, Math.min(380, HEIGHT - ly - 160), 16, 16);
+            drawPhotoOrPlaceholder(g, photo, 86, ly + 31, 688, Math.min(368, HEIGHT - ly - 172), primary, secondary, slide.getPhotoCaption());
         }
 
-        // Right side Big KPIs + Donut rings (x = 950 .. 1820)
+        // Right side 3 clean pillar cards with circles (matches web and Image 2)
         List<SlidePageDto.StatItemDto> stats = slide.getStats();
+        List<SlidePageDto.ColumnItemDto> cols = slide.getColumns();
+
         int sy = 160;
+        int cardW = 890;
+        int cardH = 210;
+        int gapY = 45;
+
         for (int i = 0; i < 3; i++) {
-            String val = (stats != null && i < stats.size()) ? safe(stats.get(i).getValue(), "90%") : "90%";
-            String lbl = (stats != null && i < stats.size()) ? safe(stats.get(i).getLabel(), "Indicador") : "Indicador";
-            String desc = (stats != null && i < stats.size()) ? safe(stats.get(i).getDescription(), "") : "";
+            String val = "0" + (i + 1);
+            String lbl = "Pilar " + (i + 1);
+            String desc = "";
 
-            // Donut ring on right
-            int ringX = 950, ringY = sy, ringSize = 150;
-            g.setStroke(new BasicStroke(16f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+            if (stats != null && i < stats.size()) {
+                if (stats.get(i).getValue() != null && !stats.get(i).getValue().isBlank()) val = stats.get(i).getValue();
+                if (stats.get(i).getLabel() != null && !stats.get(i).getLabel().isBlank()) lbl = stats.get(i).getLabel();
+                if (stats.get(i).getDescription() != null) desc = stats.get(i).getDescription();
+            } else if (cols != null && i < cols.size()) {
+                if (cols.get(i).getNumber() != null && !cols.get(i).getNumber().isBlank()) val = cols.get(i).getNumber();
+                if (cols.get(i).getTitle() != null && !cols.get(i).getTitle().isBlank()) lbl = cols.get(i).getTitle();
+                if (cols.get(i).getDescription() != null) desc = cols.get(i).getDescription();
+            }
+
+            int cy = sy + i * (cardH + gapY);
+
+            // Card background & border
+            g.setColor(new Color(248, 250, 252));
+            g.fillRoundRect(950, cy, cardW, cardH, 20, 20);
             g.setColor(new Color(226, 232, 240));
-            g.drawOval(ringX, ringY, ringSize, ringSize);
-            g.setColor(i % 2 == 0 ? primary : secondary);
-            int arcAngle = (i == 0) ? 310 : (i == 1 ? 250 : 285);
-            g.drawArc(ringX, ringY, ringSize, ringSize, 90, -arcAngle);
+            g.setStroke(new BasicStroke(2f));
+            g.drawRoundRect(950, cy, cardW, cardH, 20, 20);
 
-            // Big Value inside or next to ring
-            g.setColor(primary);
-            g.setFont(new Font("SansSerif", Font.BOLD, 56));
-            g.drawString(val, 1140, sy + 64);
+            // Circular badge
+            Color circleColor = (i % 2 == 0) ? primary : secondary;
+            g.setColor(circleColor);
+            g.fillOval(985, cy + 50, 110, 110);
 
+            g.setColor(Color.WHITE);
+            g.setFont(new Font("SansSerif", Font.BOLD, val.length() > 2 ? 30 : 44));
+            FontMetrics fm = g.getFontMetrics();
+            int tx = 985 + (110 - fm.stringWidth(val)) / 2;
+            g.drawString(val, tx, cy + 120);
+
+            // Title & Description
             g.setColor(secondary);
-            g.setFont(new Font("SansSerif", Font.BOLD, 28));
-            g.drawString(lbl.toUpperCase(), 1140, sy + 105);
+            g.setFont(new Font("SansSerif", Font.BOLD, 30));
+            drawWrappedText(g, lbl.toUpperCase(), 1130, cy + 65, cardW - 200, 36, 1);
 
-            g.setColor(new Color(100, 116, 139));
-            g.setFont(new Font("SansSerif", Font.PLAIN, 22));
-            drawWrappedText(g, desc, 1140, sy + 142, 680, 30, 2);
-
-            g.setColor(new Color(226, 232, 240));
-            g.fillRect(950, sy + 205, 860, 2);
-
-            sy += 255;
+            g.setColor(new Color(71, 85, 105));
+            g.setFont(new Font("SansSerif", Font.PLAIN, 23));
+            drawWrappedText(g, desc, 1130, cy + 115, cardW - 200, 32, 3);
         }
     }
 
@@ -637,10 +610,6 @@ public class PdfExportService {
     private void renderTimelineSteps(Graphics2D g, SlidePageDto slide, Color primary, Color secondary, BufferedImage photo) {
         g.setColor(primary);
         g.fillRect(0, 0, 18, HEIGHT);
-
-        g.setColor(primary);
-        g.setFont(new Font("SansSerif", Font.BOLD, 20));
-        g.drawString(safe(slide.getBadge(), "FLUXO SEQUENCIAL"), 100, 110);
 
         g.setColor(secondary);
         g.setFont(new Font("SansSerif", Font.BOLD, 50));
@@ -729,10 +698,6 @@ public class PdfExportService {
         drawWrappedText(g, quote, 175, 410, 630, 48, 8);
 
         // Right side Title + Vision / Mission columns (x = 940 .. 1820)
-        g.setColor(primary);
-        g.setFont(new Font("SansSerif", Font.BOLD, 20));
-        g.drawString(safe(slide.getBadge(), "DIRETRIZES & SÍNTESE"), 950, 160);
-
         g.setColor(secondary);
         g.setFont(new Font("SansSerif", Font.BOLD, 48));
         int ry = drawWrappedText(g, safe(slide.getTitle(), "PRINCÍPIO CENTRAL"), 950, 225, 860, 58, 2);
@@ -795,10 +760,6 @@ public class PdfExportService {
         drawPhotoOrPlaceholder(g, photo, px, py, pw, ph, primary, secondary, slide.getPhotoCaption());
 
         // Left side Thank You typography
-        g.setColor(primary);
-        g.setFont(new Font("SansSerif", Font.BOLD, 22));
-        g.drawString(safe(slide.getBadge(), "ENCERRAMENTO & SÍNTESE"), 120, 190);
-
         g.setColor(Color.WHITE);
         g.setFont(new Font("SansSerif", Font.BOLD, 68));
         int y = drawWrappedText(g, safe(slide.getTitle(), "OBRIGADO PELA ATENÇÃO!"), 120, 300, 980, 80, 2);

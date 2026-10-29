@@ -165,10 +165,10 @@ export const PAGE_LAYOUTS = [
   },
   {
     id: 'infographic-stats',
-    name: 'Infográfico de Dados, Gráficos & KPIs',
-    category: 'Dados & Fórmulas',
+    name: '3 Pilares em Destaque com Círculos',
+    category: 'Pilares & Destaques',
     supportsPhoto: true,
-    description: 'Painel escuro à esquerda com gráfico de barras (ou foto) e 3 indicadores circulares à direita.'
+    description: 'Painel conceitual à esquerda e 3 cartões elegantes à direita com selos circulares, títulos e descrições.'
   },
   {
     id: 'timeline-steps',

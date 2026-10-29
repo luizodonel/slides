@@ -58,10 +58,6 @@ export default function SlideCanvas16x9({
       {layout === 'cover-circle' && (
         <div className="s-layout s-cover-circle">
           <div className="cc-left-bg" style={{ backgroundColor: primaryColor }}>
-            <div className="cc-badge">
-              <span className="cc-diamond" />
-              <span>{slide.badge || 'APRESENTAÇÃO OFICIAL'}</span>
-            </div>
             <h1 className="cc-title">{slide.title}</h1>
             <div className="cc-divider" style={{ backgroundColor: secondaryColor }} />
             <p className="cc-subtitle">{slide.subtitle}</p>
@@ -96,9 +92,6 @@ export default function SlideCanvas16x9({
       {layout === 'cover-diagonal' && (
         <div className="s-layout s-cover-diagonal">
           <div className="cd-left-content">
-            <span className="cd-badge" style={{ backgroundColor: primaryColor }}>
-              {slide.badge || 'APRESENTAÇÃO'}
-            </span>
             <h1 className="cd-title" style={{ color: secondaryColor }}>{slide.title}</h1>
             <div className="cd-divider" style={{ backgroundColor: primaryColor }} />
             <p className="cd-subtitle">{slide.subtitle}</p>
@@ -130,7 +123,6 @@ export default function SlideCanvas16x9({
             {renderPhotoFrame('spl-photo')}
           </div>
           <div className="spl-content">
-            <div className="spl-badge" style={{ color: primaryColor }}>{slide.badge}</div>
             <h2 className="spl-title" style={{ color: secondaryColor }}>{slide.title}</h2>
             <div className="spl-bar" style={{ backgroundColor: primaryColor }} />
             {slide.subtitle && <h3 className="spl-subtitle">{slide.subtitle}</h3>}
@@ -157,9 +149,6 @@ export default function SlideCanvas16x9({
       {layout === 'split-photo-right' && (
         <div className="s-layout s-split-right">
           <div className="spr-content">
-            <div className="spr-badge" style={{ borderLeftColor: primaryColor, color: primaryColor }}>
-              {slide.badge}
-            </div>
             <h2 className="spr-title" style={{ color: secondaryColor }}>{slide.title}</h2>
             <div className="spr-bar" style={{ backgroundColor: primaryColor }} />
             {slide.bodyText && <p className="spr-body">{slide.bodyText}</p>}
@@ -191,7 +180,6 @@ export default function SlideCanvas16x9({
         <div className="s-layout s-columns-4">
           <div className="c4-header" style={{ backgroundColor: secondaryColor, borderBottomColor: primaryColor }}>
             <div className="c4-header-text">
-              <span className="c4-badge" style={{ color: primaryColor }}>{slide.badge}</span>
               <h2>{slide.title}</h2>
               <p>{slide.subtitle}</p>
             </div>
@@ -228,7 +216,6 @@ export default function SlideCanvas16x9({
         <div className="s-layout s-grid-4">
           <div className="g4-banner" style={{ backgroundColor: primaryColor }}>
             <div className="g4-banner-left">
-              <span className="g4-badge">{slide.badge}</span>
               <h2>{slide.title}</h2>
               <p>{slide.subtitle}</p>
             </div>
@@ -257,34 +244,20 @@ export default function SlideCanvas16x9({
         </div>
       )}
 
-      {/* 7. INFOGRAPHIC STATS */}
+      {/* 7. INFOGRAPHIC STATS - 3 PILARES COM CÍRCULOS (Inspirado no modelo genérico da Ref.) */}
       {layout === 'infographic-stats' && (
         <div className="s-layout s-infographic">
           <div className="info-left" style={{ backgroundColor: secondaryColor }}>
-            <span className="info-badge" style={{ color: primaryColor }}>{slide.badge}</span>
             <h2 className="info-title">{slide.title}</h2>
+            <div className="info-divider" style={{ backgroundColor: primaryColor }} />
+            {slide.subtitle && <h3 className="info-subtitle">{slide.subtitle}</h3>}
             <p className="info-body">{slide.bodyText}</p>
 
             {slide.photoBase64 ? (
               <div className="info-photo-box">
-                <img src={slide.photoBase64} alt="Gráfico / Foto" />
+                <img src={slide.photoBase64} alt="Foto de destaque" />
               </div>
-            ) : (
-              <div className="info-bar-chart">
-                {[45, 72, 58, 88, 74, 96].map((val, i) => (
-                  <div key={i} className="info-bar-col">
-                    <div
-                      className="info-bar-fill"
-                      style={{
-                        height: `${val}%`,
-                        backgroundColor: i % 2 === 0 ? '#ffffff' : primaryColor
-                      }}
-                    />
-                    <span>P{i + 1}</span>
-                  </div>
-                ))}
-              </div>
-            )}
+            ) : null}
 
             <div className="info-bottom-stripes">
               <div style={{ backgroundColor: primaryColor }} />
@@ -294,23 +267,23 @@ export default function SlideCanvas16x9({
           </div>
 
           <div className="info-right">
-            {(slide.stats || []).slice(0, 3).map((st, idx) => (
-              <div key={idx} className="info-stat-row">
-                <div
-                  className="info-donut"
-                  style={{
-                    borderColor: idx % 2 === 0 ? primaryColor : secondaryColor
-                  }}
-                >
-                  <span style={{ color: secondaryColor }}>{st.value}</span>
+            {((slide.stats && slide.stats.length > 0) ? slide.stats : (slide.columns || [])).slice(0, 3).map((st, idx) => {
+              const val = st.value || st.number || `0${idx + 1}`;
+              const title = st.label || st.title || `Tópico 0${idx + 1}`;
+              const desc = st.description || '';
+              const circleColor = idx % 2 === 0 ? primaryColor : secondaryColor;
+              return (
+                <div key={idx} className="info-pillar-card">
+                  <div className="info-pillar-circle" style={{ backgroundColor: circleColor }}>
+                    <span>{val}</span>
+                  </div>
+                  <div className="info-pillar-content">
+                    <h4 style={{ color: secondaryColor }}>{title}</h4>
+                    <p>{desc}</p>
+                  </div>
                 </div>
-                <div className="info-stat-text">
-                  <strong className="info-stat-val" style={{ color: primaryColor }}>{st.value}</strong>
-                  <h4 style={{ color: secondaryColor }}>{st.label}</h4>
-                  <p>{st.description}</p>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       )}
@@ -321,7 +294,6 @@ export default function SlideCanvas16x9({
           <div className="tl-left-strip" style={{ backgroundColor: primaryColor }} />
           <div className="tl-top-row">
             <div>
-              <span className="tl-badge" style={{ color: primaryColor }}>{slide.badge}</span>
               <h2 className="tl-title" style={{ color: secondaryColor }}>{slide.title}</h2>
               <p className="tl-subtitle">{slide.subtitle}</p>
             </div>
@@ -366,7 +338,6 @@ export default function SlideCanvas16x9({
           </div>
 
           <div className="qv-right-content">
-            <span className="qv-badge" style={{ color: primaryColor }}>{slide.badge}</span>
             <h2 className="qv-title" style={{ color: secondaryColor }}>{slide.title}</h2>
 
             <div className="qv-boxes">
@@ -393,7 +364,6 @@ export default function SlideCanvas16x9({
       {layout === 'closing-thankyou' && (
         <div className="s-layout s-closing" style={{ backgroundColor: secondaryColor }}>
           <div className="cl-left">
-            <span className="cl-badge" style={{ color: primaryColor }}>{slide.badge}</span>
             <h1 className="cl-title">{slide.title}</h1>
             <div className="cl-bar" style={{ backgroundColor: primaryColor }} />
             <p className="cl-subtitle">{slide.subtitle}</p>
