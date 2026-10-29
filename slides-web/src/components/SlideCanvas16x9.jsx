@@ -431,9 +431,6 @@ export default function SlideCanvas16x9({
 
       {/* Slide Footer Page Counter */}
       <div className="slide-canvas-footer">
-        {layout !== 'cover-circle' && layout !== 'closing-thankyou' && layout !== 'infographic-stats' && (
-          <span className="scf-title">{presentationTitle}</span>
-        )}
         <span className="scf-page-badge" style={{ backgroundColor: primaryColor }}>
           {pageLabel}
         </span>

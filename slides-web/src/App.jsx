@@ -44,8 +44,8 @@ const DEFAULT_LAYOUT_ORDER = [
 ];
 
 export default function App() {
-  // Mobile/Tablet View: 'edit' | 'preview'
-  const [mobileView, setMobileView] = useState('preview');
+  // Mobile/Tablet View: 'edit' | 'preview' (padrão 'edit' em celulares e tablets)
+  const [mobileView, setMobileView] = useState('edit');
 
   // 1. Idea & Subject
   const [idea, setIdea] = useState(
@@ -427,7 +427,7 @@ export default function App() {
       setActiveSlideIdx(0);
       setStatusMessage('Slides gerados com sucesso!');
       if (window.innerWidth < 960) {
-        setMobileView('preview');
+        setMobileView('edit');
       }
     } catch (_) {
       const fallback = buildLocalFallbackPresentation(payload);
@@ -435,7 +435,7 @@ export default function App() {
       setActiveSlideIdx(0);
       setStatusMessage('Slides prontos!');
       if (window.innerWidth < 960) {
-        setMobileView('preview');
+        setMobileView('edit');
       }
     } finally {
       setIsGenerating(false);
@@ -538,7 +538,7 @@ export default function App() {
         <div className="edu-mobile-toggle">
           <button
             type="button"
-            className={mobileView === 'edit' ? 'active' : ''}
+            className={`edu-toggle-btn edu-toggle-edit ${mobileView === 'edit' ? 'active' : ''}`}
             onClick={() => setMobileView('edit')}
           >
             <SlidersHorizontal size={15} />
@@ -546,7 +546,7 @@ export default function App() {
           </button>
           <button
             type="button"
-            className={mobileView === 'preview' ? 'active' : ''}
+            className={`edu-toggle-btn edu-toggle-preview ${mobileView === 'preview' ? 'active' : ''}`}
             onClick={() => setMobileView('preview')}
           >
             <Eye size={15} />
@@ -565,16 +565,6 @@ export default function App() {
             <MessageCircle size={15} />
             <span className="btn-label-desktop">Suporte WhatsApp</span>
           </a>
-
-          <button
-            type="button"
-            className="edu-btn-generate"
-            onClick={handleGenerateSlides}
-            disabled={isGenerating}
-          >
-            <Wand2 size={16} />
-            <span className="btn-label-desktop">{isGenerating ? 'Criando...' : 'Gerar com IA'}</span>
-          </button>
 
           <button
             type="button"
@@ -1284,43 +1274,43 @@ export default function App() {
               )}
             </div>
           </div>
-
-          {/* Mobile Bottom Bar */}
-          <div className="edu-mobile-bottom-bar">
-            <button
-              type="button"
-              className="edu-btn-preview-pdf"
-              style={{ flex: 1, justifyContent: 'center' }}
-              onClick={() => setIsPreviewPdfOpen(true)}
-            >
-              <FileText size={18} />
-              <span>Ver PDF</span>
-            </button>
-
-            {!isPaid ? (
-              <button
-                type="button"
-                className="edu-btn-download-mobile"
-                style={{ backgroundColor: '#10b981', flex: 2 }}
-                onClick={() => setIsPaymentModalOpen(true)}
-              >
-                <CreditCard size={18} />
-                <span>Liberar (R$ {(totalPages * 1.5).toFixed(2).replace('.', ',')})</span>
-              </button>
-            ) : (
-              <button
-                type="button"
-                className="edu-btn-download-mobile"
-                style={{ backgroundColor: displayPrimary, flex: 2 }}
-                onClick={() => handleExportPdf()}
-                disabled={isExportingPdf || !presentation}
-              >
-                <FileDown size={18} />
-                <span>{isExportingPdf ? 'Baixando...' : 'Baixar PDF'}</span>
-              </button>
-            )}
-          </div>
         </main>
+      </div>
+
+      {/* Mobile Bottom Bar (Sempre visível no celular/tablet, tanto no modo Editar quanto no Ver Slides) */}
+      <div className="edu-mobile-bottom-bar">
+        <button
+          type="button"
+          className="edu-btn-preview-pdf"
+          style={{ flex: 1, justifyContent: 'center' }}
+          onClick={() => setIsPreviewPdfOpen(true)}
+        >
+          <FileText size={18} />
+          <span>Ver PDF</span>
+        </button>
+
+        {!isPaid ? (
+          <button
+            type="button"
+            className="edu-btn-download-mobile"
+            style={{ backgroundColor: '#10b981', flex: 2 }}
+            onClick={() => setIsPaymentModalOpen(true)}
+          >
+            <CreditCard size={18} />
+            <span>Liberar (R$ {(totalPages * 1.5).toFixed(2).replace('.', ',')})</span>
+          </button>
+        ) : (
+          <button
+            type="button"
+            className="edu-btn-download-mobile"
+            style={{ backgroundColor: displayPrimary, flex: 2 }}
+            onClick={() => handleExportPdf()}
+            disabled={isExportingPdf || !presentation}
+          >
+            <FileDown size={18} />
+            <span>{isExportingPdf ? 'Baixando...' : 'Baixar PDF'}</span>
+          </button>
+        )}
       </div>
 
       {/* Print only container */}

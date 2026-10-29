@@ -95,32 +95,55 @@ body {
 /* MOBILE TOGGLE (Editar vs Ver Slides) */
 .edu-mobile-toggle {
   display: none;
-  background: #0f172a;
+  background: #090d16;
   border: 1px solid #334155;
   padding: 3px;
-  border-radius: 99px;
-  gap: 2px;
+  border-radius: 999px;
+  gap: 3px;
 }
 
-.edu-mobile-toggle button {
+.edu-mobile-toggle .edu-toggle-btn {
   background: transparent;
   border: none;
   color: #94a3b8;
-  padding: 6px 12px;
-  border-radius: 99px;
-  font-size: 0.76rem;
-  font-weight: 600;
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 700;
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 6px;
   cursor: pointer;
-  transition: all 0.15s;
+  transition: all 0.2s ease;
 }
 
-.edu-mobile-toggle button.active {
-  background: #38bdf8;
-  color: #0f172a;
-  font-weight: 700;
+.edu-mobile-toggle .edu-toggle-btn svg {
+  transition: transform 0.2s ease;
+}
+
+/* DESTAQUE ESPECIAL PARA O BOTÃO EDITAR */
+.edu-mobile-toggle .edu-toggle-edit {
+  color: #93c5fd;
+}
+
+.edu-mobile-toggle .edu-toggle-edit.active {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  color: #ffffff;
+  font-weight: 800;
+  box-shadow: 0 0 14px rgba(37, 99, 235, 0.65), 0 2px 4px rgba(0, 0, 0, 0.4);
+  border: 1px solid #60a5fa;
+}
+
+.edu-mobile-toggle .edu-toggle-edit.active svg {
+  transform: scale(1.15);
+  color: #ffffff;
+}
+
+.edu-mobile-toggle .edu-toggle-preview.active {
+  background: #0284c7;
+  color: #ffffff;
+  font-weight: 800;
+  box-shadow: 0 0 12px rgba(2, 132, 199, 0.5);
 }
 
 .edu-header-actions {
@@ -2033,18 +2056,38 @@ body {
   .edu-mobile-toggle {
     display: flex;
     gap: 3px;
-    background: #0f172a;
+    background: #090d16;
     padding: 3px;
-    border-radius: 8px;
+    border-radius: 999px;
     border: 1px solid #334155;
   }
 
-  .edu-mobile-toggle button {
-    padding: 5px 8px;
-    font-size: 0.75rem;
+  .edu-mobile-toggle .edu-toggle-btn {
+    padding: 6px 12px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    border-radius: 999px;
     display: flex;
     align-items: center;
     gap: 4px;
+  }
+
+  .edu-mobile-toggle .edu-toggle-edit {
+    color: #93c5fd;
+  }
+
+  .edu-mobile-toggle .edu-toggle-edit.active {
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+    color: #ffffff;
+    font-weight: 800;
+    border: 1px solid #60a5fa;
+    box-shadow: 0 0 12px rgba(37, 99, 235, 0.7);
+  }
+
+  .edu-mobile-toggle .edu-toggle-preview.active {
+    background: #0284c7;
+    color: #ffffff;
+    font-weight: 800;
   }
 
   .edu-header-actions {
@@ -2056,15 +2099,15 @@ body {
   /* Na barra superior do celular, esconde botões duplicados que já estão na barra inferior */
   .edu-header-actions .edu-btn-preview-pdf,
   .edu-header-actions .edu-btn-payment-trigger,
-  .edu-header-actions .edu-btn-download {
+  .edu-header-actions .edu-btn-download,
+  .edu-header-actions .edu-btn-generate {
     display: none !important;
   }
 
-  .edu-btn-whatsapp-header,
-  .edu-btn-generate {
-    padding: 6px 8px;
+  .edu-btn-whatsapp-header {
+    padding: 6px 10px;
     font-size: 0.75rem;
-    border-radius: 6px;
+    border-radius: 999px;
   }
 
   .edu-stage-bar {
@@ -2144,7 +2187,24 @@ body {
   }
 
   .edu-mobile-bottom-bar {
-    display: block;
+    display: flex !important;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    background: #0f172a;
+    border-top: 1px solid #334155;
+    padding: 8px 12px;
+    gap: 8px;
+    align-items: center;
+    box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.5);
+  }
+
+  .edu-control-panel,
+  .edu-panel-body,
+  .edu-stage {
+    padding-bottom: 75px !important;
   }
 
   .edu-subject-chips {
